@@ -1,0 +1,39 @@
+# Dipendenze di Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache e output
+dist/
+build/
+coverage/
+.cache/
+.next/
+.out/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Configurazioni ambientali
+.env
+.env.local
+.env.*.local
+
+# Log ed errori
+logs/
+*.log
+*.gz
+
+# Configurazioni editor (VS Code, JetBrains, ecc.)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Output di test
+jest/
+coverage/
+.nyc_output/
