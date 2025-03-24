@@ -1,0 +1,17 @@
+{
+  "name": "lab_3",
+  "version": "1.0.0",
+  "description": "* `GET /api/films` * Description: Get the full list of films * Request body: _None_ * Response: `200 OK` (success) * Response body: Array of objects, each describing one film. Note that absence of values is represented as null value in json. ```json [   { \"id\": 1, \"title\": \"Pulp Fiction\", \"favorite\": 1, \"watchDate\": \"2023-03-11\", \"rating\": null },   ... ] ``` * Error responses: `500 Internal Server Error` (generic error)",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  }
+}
