@@ -30,13 +30,13 @@ This course introduces the core techniques for creating distributed web applicat
 
 The repository is organized into two primary directories:
 
-- **exercises/**  
+- **Exercises/**  
   This directory contains weekly exercises segmented by topic and programming language. Each week’s content is further divided into:
   - *JavaScript*
   - *NodeJS*
   - *ReactJS*
 
-- **laboratories/**  
+- **Labs/**  
   This directory hosts laboratory projects that provide hands-on experience mirroring the topics covered in the exercises. Each laboratory is designed to solidify your understanding of:
   - *JavaScript*
   - *NodeJS*
