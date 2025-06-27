@@ -76,7 +76,7 @@ passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 passport.deserializeUser((id, done) => {
-  daoUsers.getUserById(id)
+  userDao.getUserById(id)
     .then(user => done(null, user))
     .catch(err => done(err, null));
 });
