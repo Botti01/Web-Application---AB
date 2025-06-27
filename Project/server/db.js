@@ -1,12 +1,10 @@
-'use strict';
+const sqlite3 = require('sqlite3');
 
-/** DB access module **/
-
-const sqlite = require('sqlite3');
-
-// open the database
-const db = new sqlite.Database('films.db', (err) => {
+//----------------------------------------------------------------------------
+const db = new sqlite3.Database('./DataBase/restaurant.sqlite', (err) => {
   if (err) throw err;
 });
 
+//----------------------------------------------------------------------------
 module.exports = db;
+ 

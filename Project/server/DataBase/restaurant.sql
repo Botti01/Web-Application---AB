@@ -14,8 +14,7 @@ CREATE TABLE users (
     name    TEXT    NOT NULL,
     hash    TEXT    NOT NULL,  -- hashed password
     salt    TEXT    NOT NULL,  -- salt for password
-    totp    BOOLEAN DEFAULT FALSE,
-    otp_secret TEXT  -- TOTP secret, only for users with totp = TRUE
+    otp_secret TEXT  -- TOTP secret, NULL for users without TOTP
 );
 
 -- Base dishes table (pizza, pasta, salad)
@@ -139,11 +138,11 @@ INSERT INTO ingredient_incompatibilities (ingredient1_id, ingredient2_id) VALUES
 ((SELECT id FROM ingredients WHERE name = 'olives'), (SELECT id FROM ingredients WHERE name = 'anchovies'));
 
 -- Password for all users is 'pwd'
-INSERT INTO users (email, name, hash, salt, totp, otp_secret) VALUES
-('user1@test.com', 'User One', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', TRUE, 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
-('user2@test.com', 'User Two', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', FALSE, NULL),
-('user3@test.com', 'User Three', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', TRUE, 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
-('u1@p.it', 'Test User', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', TRUE, 'LXBSMDTMSP2I5XFXIYRGFVWSFI');
+INSERT INTO users (email, name, hash, salt, otp_secret) VALUES
+('user1@test.com', 'User One', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
+('user2@test.com', 'User Two', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
+('user3@test.com', 'User Three', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
+('u1@p.it', 'Test User', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI');
 
 -- Insert sample orders to meet exam requirements
 -- User 1: 2 Small dishes
