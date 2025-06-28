@@ -14,32 +14,30 @@ import LoginForm from './LoginForm';
 // --- Not Found Layout ---
 function NotFoundLayout() {
   return (
-    <Container>
-      <Row className="justify-content-center mt-5">
-        <Col xs={12} md={8} className="text-center">
-          <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
-            <div className="card-body p-5">
-              <h2 className="text-danger mb-4 fw-bold">404 - Page Not Found</h2>
-              <p className="lead text-muted mb-4">
-                Sorry, the page you are looking for doesn't exist or has been moved.
-              </p>
-              <div className="d-flex gap-3 justify-content-center flex-wrap">
-                <Link to="/">
-                  <Button 
-                    variant="primary" 
-                    size="lg" 
-                    style={{ borderRadius: '25px' }}
-                  >
-                    <i className="bi bi-house-fill me-2"></i>
-                    Back to Restaurant
-                  </Button>
-                </Link>
-              </div>
+    <Row className="justify-content-center mt-5">
+      <Col xs={12} md={8} className="text-center">
+        <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
+          <div className="card-body p-5">
+            <h2 className="text-danger mb-4 fw-bold">404 - Page Not Found</h2>
+            <p className="lead text-muted mb-4">
+              Sorry, the page you are looking for doesn't exist or has been moved.
+            </p>
+            <div className="d-flex gap-3 justify-content-center flex-wrap">
+              <Link to="/">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  style={{ borderRadius: '25px' }}
+                >
+                  <i className="bi bi-house-fill me-2"></i>
+                  Back to Restaurant
+                </Button>
+              </Link>
             </div>
           </div>
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </Col>
+    </Row>
   );
 }
 
@@ -67,6 +65,26 @@ function OrderConfigurationLayout({ user, showMessage }) {
   const [ingredients, setIngredients] = useState([]);
   const [selectedDish, setSelectedDish] = useState(null);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [orders, setOrders] = useState([]);
+
+  // Load orders when user changes
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (user) {
+        try {
+          const ordersData = await API.getOrders();
+          setOrders(ordersData);
+        } catch (error) {
+          console.error('Error loading orders:', error);
+          showMessage('Error loading order history', 'danger');
+        }
+      } else {
+        setOrders([]);
+      }
+    };
+    
+    loadOrders();
+  }, [user, showMessage]);
 
   // Handle order submission
   const handleSubmitOrder = async (orderData) => {
@@ -80,6 +98,12 @@ function OrderConfigurationLayout({ user, showMessage }) {
       // Refresh ingredients to update availability
       const updatedIngredients = await API.getIngredients();
       setIngredients(updatedIngredients);
+      
+      // Refresh orders to show the new order
+      if (user) {
+        const updatedOrders = await API.getOrders();
+        setOrders(updatedOrders);
+      }
     } catch (error) {
       const errorMsg = error.error || error.message || 'Error placing order';
       showMessage(errorMsg, 'danger');
@@ -87,10 +111,43 @@ function OrderConfigurationLayout({ user, showMessage }) {
     }
   };
 
-  // Handle ingredient selection toggle
+  // Handle order cancellation
+  const handleCancelOrder = async (orderId) => {
+    try {
+      await API.cancelOrder(orderId);
+      showMessage('Order cancelled successfully!', 'success');
+      // Refresh orders list and ingredients
+      const updatedOrders = await API.getOrders();
+      setOrders(updatedOrders);
+      const updatedIngredients = await API.getIngredients();
+      setIngredients(updatedIngredients);
+    } catch (error) {
+      const errorMsg = error.error || error.message || 'Error cancelling order';
+      showMessage(errorMsg, 'danger');
+    }
+  };
+
+  // Handle ingredient selection toggle with dependency checking
   const handleToggleIngredient = (ingredientId) => {
+    if (!selectedDish) {
+      showMessage('Please select a dish first before adding ingredients', 'warning');
+      return;
+    }
+    
     setSelectedIngredients(prev => {
       if (prev.includes(ingredientId)) {
+        // Check if removing this ingredient would break dependencies for others
+        const ingredient = ingredients.find(ing => ing.id === ingredientId);
+        const wouldBreakDependencies = prev.some(otherIngredientId => {
+          if (otherIngredientId === ingredientId) return false;
+          const otherIngredient = ingredients.find(ing => ing.id === otherIngredientId);
+          return otherIngredient?.dependencies?.includes(ingredient.name);
+        });
+
+        if (wouldBreakDependencies) {
+          showMessage(`Cannot remove ${ingredient.name} as it's required by other selected ingredients`, 'warning');
+          return prev;
+        }
         return prev.filter(id => id !== ingredientId);
       } else {
         // Check if we can add more ingredients based on selected dish
@@ -98,53 +155,68 @@ function OrderConfigurationLayout({ user, showMessage }) {
           showMessage(`Maximum ${selectedDish.max_ingredients} ingredients allowed for ${selectedDish.size} ${selectedDish.name}`, 'warning');
           return prev;
         }
+
+        // Check if all dependencies are already selected
+        const ingredient = ingredients.find(ing => ing.id === ingredientId);
+        const missingDependencies = ingredient.dependencies?.filter(depName => {
+          const depIngredient = ingredients.find(ing => ing.name === depName);
+          return !prev.includes(depIngredient.id);
+        }) || [];
+
+        if (missingDependencies.length > 0) {
+          showMessage(`${ingredient.name} requires: ${missingDependencies.join(', ')}. Please add them first.`, 'warning');
+          return prev;
+        }
+
+        // Check incompatibilities
+        for (const selectedId of prev) {
+          const selectedIngredient = ingredients.find(ing => ing.id === selectedId);
+          if (selectedIngredient && selectedIngredient.incompatibilities?.includes(ingredient.name)) {
+            showMessage(`${ingredient.name} is incompatible with ${selectedIngredient.name}`, 'warning');
+            return prev;
+          }
+        }
+
         return [...prev, ingredientId];
       }
     });
   };
 
   return (
-    <Row className="g-4">
-      {/* Menu Section */}
-      <Col xs={12} lg={4}>
-        <div className="sticky-top" style={{ top: '90px' }}>
-          <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
-            <div className="card-body p-0">
-              <DishList
-                dishes={dishes}
-                setDishes={setDishes}
-                selectedDish={selectedDish}
-                onSelectDish={setSelectedDish}
-                showMessage={showMessage}
-              />
-            </div>
+    <Container fluid>
+      <Row className="g-4">
+        {/* Menu Section */}
+        <Col xs={12} lg={4}>
+          <div className="sticky-top" style={{ top: '90px' }}>
+            <DishList
+              dishes={dishes}
+              setDishes={setDishes}
+              selectedDish={selectedDish}
+              onSelectDish={setSelectedDish}
+              showMessage={showMessage}
+            />
           </div>
-        </div>
-      </Col>
+        </Col>
 
-      {/* Ingredients Section */}
-      <Col xs={12} lg={4}>
-        <div className="sticky-top" style={{ top: '90px' }}>
-          <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
-            <div className="card-body p-0">
-              <IngredientList
-                ingredients={ingredients}
-                setIngredients={setIngredients}
-                selectedIngredients={selectedIngredients}
-                onToggleIngredient={handleToggleIngredient}
-                showMessage={showMessage}
-                disabled={!selectedDish}
-              />
-            </div>
+        {/* Ingredients Section */}
+        <Col xs={12} lg={4}>
+          <div className="sticky-top" style={{ top: '90px' }}>
+            <IngredientList
+              ingredients={ingredients}
+              setIngredients={setIngredients}
+              selectedIngredients={selectedIngredients}
+              onToggleIngredient={handleToggleIngredient}
+              showMessage={showMessage}
+              disabled={!selectedDish}
+            />
           </div>
-        </div>
-      </Col>
+        </Col>
 
-      {/* Order Configuration Section */}
-      <Col xs={12} lg={4}>
-        <div className="sticky-top" style={{ top: '90px' }}>
-          <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
-            <div className="card-body p-0">
+        {/* Order Configuration and History Section */}
+        <Col xs={12} lg={4}>
+          <div className="sticky-top" style={{ top: '90px' }}>
+            {/* Order Configuration */}
+            <div className="mb-4">
               <OrderConfigurator
                 selectedDish={selectedDish}
                 selectedIngredients={selectedIngredients}
@@ -155,10 +227,21 @@ function OrderConfigurationLayout({ user, showMessage }) {
                 user={user}
               />
             </div>
+            
+            {/* Order History - Always show the component, it handles authentication internally */}
+            <div>
+              <OrderHistory
+                orders={orders}
+                setOrders={setOrders}
+                showMessage={showMessage}
+                user={user}
+                onCancelOrder={handleCancelOrder}
+              />
+            </div>
           </div>
-        </div>
-      </Col>
-    </Row>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
@@ -201,102 +284,50 @@ function OrderHistoryLayout({ user, showMessage }) {
 }
 
 //------------------------------------------------------------------------
-// --- Welcome Layout (for non-authenticated users) ---
-function WelcomeLayout() {
-  return (
-    <Row className="justify-content-center">
-      <Col xs={12} lg={8} className="text-center">
-        <div className="card border-0 shadow-lg" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px' }}>
-          <div className="card-body p-5">
-            <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style={{ width: '120px', height: '120px', background: 'linear-gradient(45deg, #dc2626, #ef4444)' }}>
-              <i className="bi bi-shop text-white" style={{ fontSize: '4rem' }}></i>
-            </div>
-            <h2 className="fw-bold mb-3" style={{ color: '#dc2626' }}>Welcome to Our Restaurant!</h2>
-            <p className="lead text-muted mb-4">
-              Discover our delicious selection of pizzas, pastas, and fresh salads. 
-              Customize your order with premium ingredients and enjoy authentic flavors.
-            </p>
-            <div className="row g-3 mb-4">
-              <div className="col-md-4">
-                <div className="text-center">
-                  <i className="bi bi-circle text-warning" style={{ fontSize: '2rem' }}></i>
-                  <h5 className="mt-2">Fresh Pizza</h5>
-                  <p className="small text-muted">Hand-tossed with premium ingredients</p>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="text-center">
-                  <i className="bi bi-bowl text-primary" style={{ fontSize: '2rem' }}></i>
-                  <h5 className="mt-2">Authentic Pasta</h5>
-                  <p className="small text-muted">Made fresh daily with traditional recipes</p>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="text-center">
-                  <i className="bi bi-basket text-success" style={{ fontSize: '2rem' }}></i>
-                  <h5 className="mt-2">Fresh Salads</h5>
-                  <p className="small text-muted">Crisp vegetables and healthy options</p>
-                </div>
-              </div>
-            </div>
-            <div className="alert alert-info border-0 shadow-sm" style={{ borderRadius: '15px' }}>
-              <i className="bi bi-info-circle-fill me-2"></i>
-              <strong>Sign in</strong> to place orders and track your order history.
-            </div>
-          </div>
-        </div>
-      </Col>
-    </Row>
-  );
-}
-
-//------------------------------------------------------------------------
 // --- Main Restaurant Layout ---
 function RestaurantLayout({ user, message, messageType = 'danger', onLogout, showMessage }) {
   const location = useLocation();
 
   return (
-    <div style={{ paddingTop: '80px', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
       <NavigationBar user={user} onLogout={onLogout} />
       
-      <Container fluid className="px-4 py-4">
-        {/* Message Alert */}
-        {message && (
-          <Row>
-            <Col>
-              <Alert 
-                className="my-3 border-0 shadow-sm" 
-                variant={messageType} 
-                dismissible 
-                style={{ borderRadius: '10px' }}
-                onClose={() => showMessage('', 'info')}
-              >
-                <i className={`bi ${
-                  messageType === 'success' ? 'bi-check-circle-fill' : 
-                  messageType === 'warning' ? 'bi-exclamation-triangle-fill' : 
-                  'bi-exclamation-triangle-fill'
-                } me-2`}></i>
-                {message}
-              </Alert>
-            </Col>
-          </Row>
-        )}
+      <div style={{ paddingTop: '80px' }}>
+        <Container fluid className="px-4 py-4">
+          {/* Message Alert */}
+          {message && (
+            <Row>
+              <Col>
+                <Alert 
+                  className="my-3 border-0 shadow-sm" 
+                  variant={messageType} 
+                  dismissible 
+                  style={{ borderRadius: '10px' }}
+                  onClose={() => showMessage('', 'info')}
+                >
+                  <i className={`bi ${
+                    messageType === 'success' ? 'bi-check-circle-fill' : 
+                    messageType === 'warning' ? 'bi-exclamation-triangle-fill' : 
+                    'bi-exclamation-triangle-fill'
+                  } me-2`}></i>
+                  {message}
+                </Alert>
+              </Col>
+            </Row>
+          )}
 
-        {/* Main Content */}
-        {location.pathname === "/" && (
-          user ? (
+          {/* Main Content */}
+          {location.pathname === "/" && (
             <OrderConfigurationLayout user={user} showMessage={showMessage} />
-          ) : (
-            <WelcomeLayout />
-          )
-        )}
-        
-        {location.pathname === "/orders" && (
-          <OrderHistoryLayout user={user} showMessage={showMessage} />
-        )}
-        
-        <Outlet context={{ user, showMessage }} />
-      </Container>
+          )}
+          
+          {location.pathname === "/orders" && (
+            <OrderHistoryLayout user={user} showMessage={showMessage} />
+          )}
+          
+          <Outlet context={{ user, showMessage }} />
+        </Container>
+      </div>
     </div>
   );
 }
@@ -305,9 +336,9 @@ function RestaurantLayout({ user, message, messageType = 'danger', onLogout, sho
 // --- TOTP Layout ---
 function TotpLayout({ totpSuccessful }) {
   return (
-    <Container>
-      <Row className="justify-content-center" style={{ minHeight: '100vh', paddingTop: '100px' }}>
-        <Col xs={12} sm={10} md={8} lg={6}>
+    <Container fluid className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+      <Row className="w-100 justify-content-center">
+        <Col xs={12} sm={10} md={8} lg={6} xl={5}>
           <LoginForm 
             totpRequired={true}
             onTotp={totpSuccessful}

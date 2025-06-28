@@ -12,7 +12,7 @@ import API from './API';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import { RestaurantLayout, LoginLayout, NotFoundLayout, OrderHistoryLayout } from './components/Layout';
+import { RestaurantLayout, LoginLayout, NotFoundLayout} from './components/Layout';
 
 //----------------------------------------------------------------------------
 function App() {
@@ -151,21 +151,7 @@ function App() {
           } 
         />
         
-        {/* Order History Route - requires authentication */}
-        <Route 
-          path="/orders" 
-          element={
-            <RestaurantLayout 
-              user={user} 
-              message={message} 
-              messageType={messageType} 
-              onLogout={handleLogout} 
-              showMessage={showMessage} 
-            />
-          } 
-        />
-        
-        {/* Main Restaurant Route */}
+        {/* Main Restaurant Route - Public browsing, login required for ordering */}
         <Route 
           path="/" 
           element={

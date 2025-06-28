@@ -85,12 +85,27 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
         <h5 className="mb-0 fw-bold"><i className="bi bi-cart3 me-2"></i> Order Configuration</h5>
       </div>
 
-      <Card className="shadow-sm border-0">
+      <Card className="shadow-sm border-0" style={{ minHeight: '400px' }}>
         <Card.Body>
           {!selectedDish ? (
-            <div className="text-center py-4">
-              <i className="bi bi-arrow-left-circle text-muted" style={{ fontSize: '3rem' }}></i>
-              <p className="text-muted mt-2">Select a dish from the menu to start configuring your order</p>
+            <div className="text-center py-5">
+              <div className="mb-4">
+                <i className="bi bi-arrow-left-circle text-muted" style={{ fontSize: '4rem' }}></i>
+              </div>
+              <h5 className="text-muted mb-3">Start Your Order</h5>
+              <p className="text-muted mb-4">
+                Select a dish from the menu to start configuring your order.<br/>
+                Once you choose a dish, you'll be able to add ingredients and see the total price.
+              </p>
+              <div className="bg-light p-3 rounded">
+                <small className="text-muted">
+                  <i className="bi bi-info-circle me-2"></i>
+                  <strong>How it works:</strong><br/>
+                  1. Choose a dish and size from the menu<br/>
+                  2. Add ingredients (respecting constraints)<br/>
+                  3. Review your order and place it
+                </small>
+              </div>
             </div>
           ) : (
             <>
@@ -120,7 +135,13 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
                   <i className="bi bi-plus-circle me-2"></i>Selected Ingredients ({selectedIngredients.length}/{selectedDish.max_ingredients})
                 </h6>
                 {selectedIngredients.length === 0 ? (
-                  <p className="text-muted fst-italic">No ingredients selected</p>
+                  <div className="text-center py-3 bg-light rounded">
+                    <i className="bi bi-basket text-muted" style={{ fontSize: '1.5rem' }}></i>
+                    <p className="text-muted mb-0 mt-2">
+                      No ingredients selected<br/>
+                      <small>Add ingredients from the list on the left</small>
+                    </p>
+                  </div>
                 ) : (
                   <ListGroup className="small">
                     {getSelectedIngredientsDetails().map(ingredient => (

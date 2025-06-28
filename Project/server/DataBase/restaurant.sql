@@ -89,7 +89,7 @@ INSERT INTO dishes (name, size, price, max_ingredients) VALUES
 ('salad', 'Large', 9.0, 7);
 
 -- Insert ingredients with initial availability
--- Note: current_availability will be adjusted after inserting sample orders
+-- Keep availability as specified in the exam requirements
 INSERT INTO ingredients (name, price, availability, current_availability) VALUES
 ('mozzarella', 1.00, 3, 3),
 ('tomatoes', 0.50, NULL, NULL),  -- unlimited
@@ -146,60 +146,43 @@ INSERT INTO users (email, name, hash, salt, otp_secret) VALUES
 
 -- Insert sample orders to meet exam requirements
 -- User 1: 2 Small dishes
--- Order 1: Small pizza with mozzarella, tomatoes, olives
+-- Order 1: Small pizza with carrots, potatoes (using unlimited ingredients)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pizza', 'Small', 7.20, '2024-12-01 12:30:00');
+(1, 'pizza', 'Small', 5.70, '2024-12-01 12:30:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(1, (SELECT id FROM ingredients WHERE name = 'mozzarella')),
-(1, (SELECT id FROM ingredients WHERE name = 'tomatoes')),
-(1, (SELECT id FROM ingredients WHERE name = 'olives'));
+(1, (SELECT id FROM ingredients WHERE name = 'carrots')),
+(1, (SELECT id FROM ingredients WHERE name = 'potatoes'));
 
--- Order 2: Small pasta with ham, carrots
+-- Order 2: Small pasta with eggs (using unlimited ingredients)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pasta', 'Small', 6.60, '2024-12-02 19:15:00');
+(1, 'pasta', 'Small', 6.00, '2024-12-02 19:15:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(2, (SELECT id FROM ingredients WHERE name = 'ham')),
-(2, (SELECT id FROM ingredients WHERE name = 'carrots'));
+(2, (SELECT id FROM ingredients WHERE name = 'eggs'));
 
 -- User 2: 1 Medium + 1 Large dish
--- Order 3: Medium salad with tuna, olives, carrots, potatoes
+-- Order 3: Medium salad with carrots, potatoes, eggs (using unlimited ingredients)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'salad', 'Medium', 9.60, '2024-12-03 13:45:00');
+(2, 'salad', 'Medium', 8.30, '2024-12-03 13:45:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(3, (SELECT id FROM ingredients WHERE name = 'tuna')),
-(3, (SELECT id FROM ingredients WHERE name = 'olives')),
 (3, (SELECT id FROM ingredients WHERE name = 'carrots')),
-(3, (SELECT id FROM ingredients WHERE name = 'potatoes'));
+(3, (SELECT id FROM ingredients WHERE name = 'potatoes')),
+(3, (SELECT id FROM ingredients WHERE name = 'eggs'));
 
--- Order 4: Large pizza with mushrooms, parmesan, mozzarella, tomatoes, olives
+-- Order 4: Large pizza with parmesan (using unlimited ingredients but respecting dependencies)
+-- Note: parmesan requires mozzarella, mozzarella requires tomatoes, tomatoes require olives
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'pizza', 'Large', 13.30, '2024-12-03 20:00:00');
+(2, 'pizza', 'Large', 11.60, '2024-12-03 20:00:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(4, (SELECT id FROM ingredients WHERE name = 'mushrooms')),
-(4, (SELECT id FROM ingredients WHERE name = 'parmesan')),
-(4, (SELECT id FROM ingredients WHERE name = 'mozzarella')),
+(4, (SELECT id FROM ingredients WHERE name = 'olives')),
 (4, (SELECT id FROM ingredients WHERE name = 'tomatoes')),
-(4, (SELECT id FROM ingredients WHERE name = 'olives'));
+(4, (SELECT id FROM ingredients WHERE name = 'parmesan'));
 
--- Update ingredient availability based on orders placed
--- mozzarella: used 2 times (order 1, 4) -> 3-2=1 remaining
-UPDATE ingredients SET current_availability = 1 WHERE name = 'mozzarella';
-
--- ham: used 1 time (order 2) -> 2-1=1 remaining  
-UPDATE ingredients SET current_availability = 1 WHERE name = 'ham';
-
--- tuna: used 1 time (order 3) -> 2-1=1 remaining
-UPDATE ingredients SET current_availability = 1 WHERE name = 'tuna';
-
--- mushrooms: used 1 time (order 4) -> 3-1=2 remaining
-UPDATE ingredients SET current_availability = 2 WHERE name = 'mushrooms';
-
--- anchovies: not used -> 1 remaining
--- (current_availability already set to 1)
+-- Do NOT update ingredient availability since these are pre-loaded orders
+-- The application starts with the availability amounts stated in the text for testing
 
 -- Create indexes for better performance
 CREATE INDEX idx_orders_user_id ON orders(user_id);

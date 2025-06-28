@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import API from '../API';
 
 function LoginForm({ onLogin, totpRequired, onTotp, onSkipTotp }) {
 
-  // state for the username
+  // state for the username/email
   const [username, setUsername] = useState('');
   // state for the password
   const [password, setPassword] = useState('');

@@ -7,13 +7,16 @@ exports.getAllIngredients = () => {
     const sql = `
       SELECT i.*,
              GROUP_CONCAT(DISTINCT dep.name) as dependencies,
-             GROUP_CONCAT(DISTINCT inc1.name || ',' || inc2.name) as incompatibilities
+             GROUP_CONCAT(DISTINCT CASE 
+               WHEN inc_rel.ingredient1_id = i.id THEN inc2.name
+               WHEN inc_rel.ingredient2_id = i.id THEN inc1.name
+             END) as incompatibilities
       FROM ingredients i
       LEFT JOIN ingredient_dependencies id ON i.id = id.ingredient_id
       LEFT JOIN ingredients dep ON id.required_ingredient_id = dep.id
       LEFT JOIN ingredient_incompatibilities inc_rel ON (i.id = inc_rel.ingredient1_id OR i.id = inc_rel.ingredient2_id)
-      LEFT JOIN ingredients inc1 ON (inc_rel.ingredient1_id = inc1.id AND i.id = inc_rel.ingredient2_id)
-      LEFT JOIN ingredients inc2 ON (inc_rel.ingredient2_id = inc2.id AND i.id = inc_rel.ingredient1_id)
+      LEFT JOIN ingredients inc1 ON inc_rel.ingredient1_id = inc1.id
+      LEFT JOIN ingredients inc2 ON inc_rel.ingredient2_id = inc2.id
       GROUP BY i.id
       ORDER BY i.name
     `;
@@ -25,7 +28,7 @@ exports.getAllIngredients = () => {
           ...row,
           dependencies: row.dependencies ? row.dependencies.split(',') : [],
           incompatibilities: row.incompatibilities ? 
-            row.incompatibilities.split(',').filter(inc => inc && !inc.includes(row.name)) : []
+            row.incompatibilities.split(',').filter(inc => inc && inc !== row.name) : []
         }));
         resolve(ingredients);
       }
