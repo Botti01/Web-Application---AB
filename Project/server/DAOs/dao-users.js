@@ -38,11 +38,16 @@ exports.getUser = (email, password) => {
 // Get user by ID
 exports.getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, email, name FROM users WHERE id = ?';
+    const sql = 'SELECT id, email, name, otp_secret FROM users WHERE id = ?';
     db.get(sql, [id], (err, row) => {
       if (err) reject(err);
       else if (!row) resolve({ error: 'User not found' });
-      else resolve(row);
+      else resolve({
+        id: row.id,
+        username: row.email,
+        name: row.name,
+        secret: row.otp_secret
+      });
     });
   });
 };

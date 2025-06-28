@@ -1,216 +1,190 @@
-/*
- * Web Applications
- */
+// -----------------------------------------------------------------------------
+// App Component
+// -----------------------------------------------------------------------------
+// This file defines the main App component, which serves as the root of the
+// restaurant ordering application. It manages authentication state, handles 
+// user sessions with TOTP support, and defines routes for navigation.
+// -----------------------------------------------------------------------------
 
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import API from './API';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import './App.css';
 
-import dayjs from 'dayjs';
+import { RestaurantLayout, LoginLayout, NotFoundLayout, OrderHistoryLayout } from './components/Layout';
 
-import { React, useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { Routes, Route, Outlet, Link, useParams, Navigate, useNavigate } from 'react-router';
-
-//import FILMS from './films';
-
-import { GenericLayout, NotFoundLayout, TableLayout, AddLayout, EditLayout, LoginLayout, TotpLayout } from './components/Layout';
-import API from './API.js';
-
+//----------------------------------------------------------------------------
 function App() {
 
-  const navigate = useNavigate();  // To be able to call useNavigate, the component must already be in BrowserRouter, done in main.jsx
+  //----------------------------------------------------------------------------
+  // State management using React hooks
 
-  // This state keeps track if the user is currently logged-in.
-  const [loggedIn, setLoggedIn] = useState(false);
-  // This state contains the user's info.
+  // User information
   const [user, setUser] = useState(null);
-  const [loggedInTotp, setLoggedInTotp] = useState(false);
-
-
-  const [filmList, setFilmList] = useState([]);
+  // If TOTP is required for the user
+  const [totpRequired, setTotpRequired] = useState(false);
+  // Pending user data (for TOTP verification)
+  const [pendingUser, setPendingUser] = useState(null);
+  // Global message to display to the user (e.g., success or error messages)
   const [message, setMessage] = useState('');
-  const [dirty, setDirty] = useState(true);
+  // Type of message to display (success, warning, danger)
+  const [messageType, setMessageType] = useState('danger');
 
-  // If an error occurs, the error message will be shown using a state.
-  const handleErrors = (err) => {
-    //console.log('DEBUG: err: '+JSON.stringify(err));
-    let msg = '';
-    if (err.error)
-      msg = err.error;
-    else if (err.errors) {
-      if (err.errors[0].msg)
-        msg = err.errors[0].msg + " : " + err.errors[0].path;
-    } else if (Array.isArray(err))
-      msg = err[0].msg + " : " + err[0].path;
-    else if (typeof err === "string") msg = String(err);
-    else msg = "Unknown Error";
+  const navigate = useNavigate();
 
-    setMessage(msg); // WARNING: a more complex application requires a queue of messages. In this example only the last error is shown.
+  //----------------------------------------------------------------------------
+  // Check session on mount
+  // This effect runs once when the component mounts to check if the user is logged in
+  useEffect(() => {
+    API.getUserInfo()
+      .then(u => setUser(u))
+      .catch(() => setUser(null));
+  }, []);
 
-    if (msg === 'Not authenticated')
-      setTimeout(() => {  // do logout in the app state
-        setUser(undefined); setLoggedIn(false); setLoggedInTotp(false); setDirty(true);
-      }, 2000);
-    else
-      setTimeout(()=>setDirty(true), 2000);  // Fetch the current version from server, after a while
-  }
-
-  useEffect(()=> {
-    const checkAuth = async() => {
-      try {
-        // here you have the user info, if already logged in
-        const user = await API.getUserInfo();
-        setLoggedIn(true);
-        setUser(user);
-        if (user.isTotp)
-          setLoggedInTotp(true);
-      } catch(err) {
-        // NO need to do anything: user is simply not yet authenticated
-        //handleError(err);
-      }
-    };
-    checkAuth();
-  }, []);  // The useEffect callback is called only the first time the component is mounted.
-
-
-  /**
-   * Defining a structure for Filters
-   * Each filter is identified by a unique name and is composed by the following fields:
-   * - A label to be shown in the GUI
-   * - A URL for the router
-   * - A filter function applied before passing the films to the FilmTable component
-   */
-  const filters = {
-    'all': { label: 'All', url: '/', filterFunction: () => true },
-    'favorite': { label: 'Favorites', url: '/filter/favorite', filterFunction: film => film.favorite },
-    'best': { label: 'Best Rated', url: '/filter/best', filterFunction: film => film.rating >= 5 },
-    'lastmonth': { label: 'Seen Last Month', url: '/filter/lastmonth', filterFunction: film => isSeenLastMonth(film) },
-    'unseen': { label: 'Unseen', url: '/filter/unseen', filterFunction: film => film.watchDate ? false : true }
-  };
-
-  const isSeenLastMonth = (film) => {
-    if ('watchDate' in film) {  // Accessing watchDate only if defined
-      const diff = film.watchDate.diff(dayjs(), 'month')
-      const isLastMonth = diff <= 0 && diff > -1;      // last month
-      return isLastMonth;
-    }
-  }
-
-  const filtersToArray = Object.entries(filters);
-  //console.log(JSON.stringify(filtersToArray));
-
-  // NB: to implicitly return an object in an arrow function, use () around the object {}
-  // const filterArray = filtersToArray.map( e => ({filterName: e[0], ...e[1]}) );
-  // alternative with destructuring directly in the parameter of the callback 
-  const filterArray = filtersToArray.map(([filterName, obj ]) =>
-     ({ filterName: filterName, ...obj }));
-
-  /**
-   * This function handles the login process.
-   * It requires a username and a password inside a "credentials" object.
-   */
-  const handleLogin = async (credentials) => {
+  //----------------------------------------------------------------------------
+  // Handle user login
+  async function handleLogin(credentials) {
     try {
-      const user = await API.logIn(credentials);
-      setUser(user);
-      setLoggedIn(true);
+      const res = await API.logIn(credentials);
+      
+      // If user can do TOTP, set up for TOTP verification
+      if (res.canDoTotp) {
+        setTotpRequired(true);
+        setPendingUser(res);
+        setUser(null);
+        setMessage('Please complete 2FA authentication for full access');
+        setMessageType('info');
+      } else {
+        // User doesn't have TOTP, login directly
+        setUser(res);
+        setTotpRequired(false);
+        setPendingUser(null);
+        navigate('/');
+        showMessage('Welcome! You are now logged in.', 'success');
+      }
     } catch (err) {
-      // error is handled and visualized in the login form, do not manage error, throw it
-      throw err;
+      setUser(null);
+      setTotpRequired(false);
+      setPendingUser(null);
+      setMessage('');
+      throw new Error(err.error || 'Login failed. Please check your credentials.');
     }
+  }
+
+  //----------------------------------------------------------------------------
+  // Handle TOTP verification
+  async function handleTotp(code) {
+    try {
+      await API.logInTotp(code);
+      const u = await API.getUserInfo();
+      setUser(u);
+      setTotpRequired(false);
+      setPendingUser(null);
+      setMessage('');
+      navigate('/');
+      showMessage('2FA authentication successful! You now have full access.', 'success');
+    } catch (err) {
+      throw new Error(err.error || 'Invalid TOTP code. Please try again.');
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  // Handle skipping TOTP for users who can do TOTP but choose not to
+  async function handleSkipTotp() {
+    if (pendingUser) {
+      setUser({
+        ...pendingUser,
+        isTotp: false // Mark as not having completed TOTP
+      });
+      setTotpRequired(false);
+      setPendingUser(null);
+      setMessage('');
+      navigate('/');
+      showMessage('Logged in with limited access. Complete 2FA to cancel orders.', 'warning');
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  // Handle user logout
+  async function handleLogout() {
+    try {
+      await API.logOut();
+      setUser(null);
+      setTotpRequired(false);
+      setPendingUser(null);
+      setMessage('');
+      navigate('/');
+      showMessage('You have been logged out successfully.', 'info');
+    } catch (err) {
+      showMessage('Error during logout', 'danger');
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  // Global message handler
+  const showMessage = (msg, type = 'danger') => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(''), 5000); // Longer timeout for restaurant messages
   };
 
-  /**
-   * This function handles the logout process.
-   */ 
-  const handleLogout = async () => {
-    await API.logOut();
-    setLoggedIn(false);
-    setLoggedInTotp(false);
-    // clean up everything
-    setUser(null);
-    setFilmList([]);
-  };
-
-
-
-  function deleteFilm(filmId) {
-    API.deleteFilm(filmId)
-      .then(()=> setDirty(true))
-      .catch(err=>handleErrors(err));
-  }
-
-  function editFilm(film) {
-    API.updateFilm(film)
-      .then(()=>{setDirty(true); navigate('/');})
-      .catch(err=>handleErrors(err));
-  }
-
-  function setFilmFavorite(id, favorite) {
-    API.setFilmFavorite(id, favorite)
-      .then(()=>{setDirty(true); navigate('/');})
-      .catch(err=>handleErrors(err));
-  }
-
-  function setFilmRating(id, favorite) {
-    API.setFilmRating(id, favorite)
-      .then(()=>{setDirty(true); navigate('/');})
-      .catch(err=>handleErrors(err));
-  }
-
-  function addFilm(film) {
-    API.addFilm(film)
-      .then(()=>{setDirty(true); navigate('/');})
-      .catch(err=>handleErrors(err));
-  }
-
+  //############################################################################
+  // --- Routing ---
   return (
-      <Container fluid>
-        <Routes>
-          <Route path="/" element={loggedIn? <GenericLayout filterArray={filterArray} 
-                                    message={message} setMessage={setMessage}
-                                    loggedIn={loggedIn} user={user} loggedInTotp={loggedInTotp} 
-                                    logout={handleLogout} /> : <Navigate replace to='/login' />} >
-            <Route index element={loggedIn? <TableLayout 
-                 filmList={filmList} setFilmList={setFilmList} filters={filters} 
-                 deleteFilm={deleteFilm} editFilm={editFilm}
-                 setFilmFavorite={setFilmFavorite} setFilmRating={setFilmRating}
-                 disableActions={!loggedInTotp}
-                 handleErrors={handleErrors}
-                 dirty={dirty} setDirty={setDirty} /> : <Navigate replace to='/' />} />
-            <Route path="add" element={loggedInTotp? <AddLayout addFilm={addFilm} /> : <Navigate replace to='/' />} />
-            <Route path="edit/:filmId" element={loggedInTotp? <EditLayout films={filmList} editFilm={editFilm} /> : <Navigate replace to='/' />} />
-            <Route path="filter/:filterId" element={loggedIn? <TableLayout 
-                 filmList={filmList} setFilmList={setFilmList}
-                 filters={filters} deleteFilm={deleteFilm} editFilm={editFilm}
-                 setFilmFavorite={setFilmFavorite} setFilmRating={setFilmRating}
-                 disableActions={!loggedInTotp}
-                 dirty={dirty} setDirty={setDirty} handleErrors={handleErrors} />
-                 : <Navigate replace to='/' />} />
-            <Route path="*" element={<NotFoundLayout />} />
-          </Route>
-          <Route path='/login' element={ <LoginWithTotp loggedIn={loggedIn} login={handleLogin}
-                                        user={user} setLoggedInTotp={setLoggedInTotp} /> } />
-        </Routes>
-      </Container>
+    <div style={{ minHeight: '100vh' }}>
+      <Routes>
+        {/* Login Route */}
+        <Route 
+          path="/login" 
+          element={
+            user && !totpRequired ? (
+              <Navigate replace to="/" />
+            ) : (
+              <LoginLayout 
+                onLogin={handleLogin} 
+                totpRequired={totpRequired} 
+                onTotp={handleTotp} 
+                onSkipTotp={handleSkipTotp} 
+              />
+            )
+          } 
+        />
+        
+        {/* Order History Route - requires authentication */}
+        <Route 
+          path="/orders" 
+          element={
+            <RestaurantLayout 
+              user={user} 
+              message={message} 
+              messageType={messageType} 
+              onLogout={handleLogout} 
+              showMessage={showMessage} 
+            />
+          } 
+        />
+        
+        {/* Main Restaurant Route */}
+        <Route 
+          path="/" 
+          element={
+            <RestaurantLayout 
+              user={user} 
+              message={message} 
+              messageType={messageType} 
+              onLogout={handleLogout} 
+              showMessage={showMessage} 
+            />
+          } 
+        />
+        
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFoundLayout />} />
+      </Routes>
+    </div>
   );
 }
 
-function LoginWithTotp(props) {
-  if (props.loggedIn) {
-    if (props.user.canDoTotp) {
-      if (props.loggedInTotp) {
-        return <Navigate replace to='/' />;
-      } else {
-        return <TotpLayout totpSuccessful={() => props.setLoggedInTotp(true)} />;
-      }
-    } else {
-      return <Navigate replace to='/' />;
-    }
-  } else {
-    return <LoginLayout login={props.login} />;
-  }
-}
-
+//----------------------------------------------------------------------------
 export default App;
