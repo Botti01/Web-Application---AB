@@ -79,16 +79,16 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
   //-----------------------------------------------------------------------------
   // Render the order configurator
   return (
-    <div>
+    <div className="h-100 d-flex flex-column">
       {/* Header for the configurator section */}
-      <div className="p-3 rounded-top text-white shadow-sm" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #7c2d12 0%, #ea580c 100%)' }}>
+      <div className="p-3 rounded-top text-white shadow-sm" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #7c2d12 0%, #ea580c 100%)', flexShrink: 0 }}>
         <h5 className="mb-0 fw-bold"><i className="bi bi-cart3 me-2"></i> Order Configuration</h5>
       </div>
 
-      <Card className="shadow-sm border-0" style={{ minHeight: '400px' }}>
-        <Card.Body>
+      <Card className="shadow-sm border-0 flex-grow-1 d-flex flex-column" style={{ borderRadius: '0 0 15px 15px' }}>
+        <Card.Body className="flex-grow-1 d-flex flex-column">
           {!selectedDish ? (
-            <div className="text-center py-5">
+            <div className="text-center py-5 flex-grow-1 d-flex flex-column justify-content-center">
               <div className="mb-4">
                 <i className="bi bi-arrow-left-circle text-muted" style={{ fontSize: '4rem' }}></i>
               </div>
@@ -108,9 +108,9 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               </div>
             </div>
           ) : (
-            <>
+            <div className="flex-grow-1 d-flex flex-column">
               {/* Selected Dish */}
-              <div className="mb-4">
+              <div className="mb-3 flex-shrink-0">
                 <h6 className="fw-bold text-primary mb-2">
                   <i className="bi bi-check-circle me-2"></i>Selected Dish
                 </h6>
@@ -130,12 +130,12 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               </div>
 
               {/* Selected Ingredients */}
-              <div className="mb-4">
-                <h6 className="fw-bold text-success mb-2">
+              <div className="mb-3 flex-grow-1 d-flex flex-column">
+                <h6 className="fw-bold text-success mb-2 flex-shrink-0">
                   <i className="bi bi-plus-circle me-2"></i>Selected Ingredients ({selectedIngredients.length}/{selectedDish.max_ingredients})
                 </h6>
                 {selectedIngredients.length === 0 ? (
-                  <div className="text-center py-3 bg-light rounded">
+                  <div className="text-center py-3 bg-light rounded flex-shrink-0">
                     <i className="bi bi-basket text-muted" style={{ fontSize: '1.5rem' }}></i>
                     <p className="text-muted mb-0 mt-2">
                       No ingredients selected<br/>
@@ -143,27 +143,29 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
                     </p>
                   </div>
                 ) : (
-                  <ListGroup className="small">
-                    {getSelectedIngredientsDetails().map(ingredient => (
-                      <ListGroup.Item key={ingredient.id} className="d-flex justify-content-between align-items-center py-1 border-0 bg-light">
-                        <span>{ingredient.name}</span>
-                        <Badge bg="success">€{ingredient.price.toFixed(2)}</Badge>
-                      </ListGroup.Item>
-                    ))}
-                  </ListGroup>
+                  <div className="flex-grow-1 overflow-auto" style={{ maxHeight: '200px' }}>
+                    <ListGroup className="small">
+                      {getSelectedIngredientsDetails().map(ingredient => (
+                        <ListGroup.Item key={ingredient.id} className="d-flex justify-content-between align-items-center py-1 border-0 bg-light">
+                          <span>{ingredient.name}</span>
+                          <Badge bg="success">€{ingredient.price.toFixed(2)}</Badge>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+                  </div>
                 )}
               </div>
 
               {/* Validation Error */}
               {validationError && (
-                <Alert variant="warning" className="small py-2">
+                <Alert variant="warning" className="small py-2 flex-shrink-0">
                   <i className="bi bi-exclamation-triangle me-2"></i>
                   {validationError}
                 </Alert>
               )}
 
               {/* Total Price */}
-              <div className="mb-3 p-3 bg-light rounded">
+              <div className="mb-3 p-3 bg-light rounded flex-shrink-0">
                 <Row className="align-items-center">
                   <Col>
                     <h5 className="mb-0 fw-bold">
@@ -177,7 +179,7 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               </div>
 
               {/* Submit Button */}
-              <div className="d-grid">
+              <div className="d-grid flex-shrink-0">
                 <Button
                   variant="primary"
                   size="lg"
@@ -191,11 +193,11 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               </div>
 
               {!user && (
-                <small className="text-muted d-block text-center mt-2">
+                <small className="text-muted d-block text-center mt-2 flex-shrink-0">
                   You need to be logged in to place an order
                 </small>
               )}
-            </>
+            </div>
           )}
         </Card.Body>
       </Card>

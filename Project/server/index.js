@@ -319,11 +319,11 @@ app.post('/api/orders', isLoggedIn, [
 // Get user's orders (authenticated users only)
 app.get('/api/orders', isLoggedIn, async (req, res) => {
   try {
-    const orders = await orderDao.getOrdersByUserId(req.user.id);
+    const orders = await orderDao.getOrdersByUser(req.user.id);
     res.json(orders);
-  } catch (err) {
-    console.error('Error getting orders:', err);
-    res.status(500).json({ error: 'Database error' });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
 

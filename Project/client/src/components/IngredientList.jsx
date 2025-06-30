@@ -76,23 +76,23 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
       constraints.push(`Incompatible with: ${ingredient.incompatibilities.join(', ')}`);
     }
     
-    if (ingredient.current_availability !== null) {
-      constraints.push(`Available: ${ingredient.current_availability}`);
-    } else {
-      constraints.push('Unlimited availability');
-    }
+    // if (ingredient.current_availability !== null) {
+    //   constraints.push(`Available: ${ingredient.current_availability}`);
+    // } else {
+    //   constraints.push('Unlimited availability');
+    // }
 
-    // Add selection hint for dependencies
-    const isSelected = selectedIngredients.includes(ingredient.id);
-    if (!isSelected && ingredient.dependencies && ingredient.dependencies.length > 0) {
-      const missingDependencies = ingredient.dependencies.filter(depName => {
-        const depIngredient = ingredients.find(ing => ing.name === depName);
-        return !selectedIngredients.includes(depIngredient?.id);
-      });
-      if (missingDependencies.length > 0) {
-        constraints.push(`⚠️ Add first: ${missingDependencies.join(', ')}`);
-      }
-    }
+    // // Add selection hint for dependencies
+    // const isSelected = selectedIngredients.includes(ingredient.id);
+    // if (!isSelected && ingredient.dependencies && ingredient.dependencies.length > 0) {
+    //   const missingDependencies = ingredient.dependencies.filter(depName => {
+    //     const depIngredient = ingredients.find(ing => ing.name === depName);
+    //     return !selectedIngredients.includes(depIngredient?.id);
+    //   });
+    //   if (missingDependencies.length > 0) {
+    //     constraints.push(`⚠️ Add first: ${missingDependencies.join(', ')}`);
+    //   }
+    // }
     
     return constraints.join('\n');
   };

@@ -146,43 +146,56 @@ INSERT INTO users (email, name, hash, salt, otp_secret) VALUES
 
 -- Insert sample orders to meet exam requirements
 -- User 1: 2 Small dishes
--- Order 1: Small pizza with carrots, potatoes (using unlimited ingredients)
+-- Order 1: Small pizza with olives, tomatoes, mozzarella (respecting dependency chain)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pizza', 'Small', 5.70, '2024-12-01 12:30:00');
+(1, 'pizza', 'Small', 7.20, '2024-12-01 12:30:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(1, (SELECT id FROM ingredients WHERE name = 'carrots')),
-(1, (SELECT id FROM ingredients WHERE name = 'potatoes'));
+(1, (SELECT id FROM ingredients WHERE name = 'olives')),
+(1, (SELECT id FROM ingredients WHERE name = 'tomatoes')),
+(1, (SELECT id FROM ingredients WHERE name = 'mozzarella'));
 
--- Order 2: Small pasta with eggs (using unlimited ingredients)
+-- Order 2: Small pasta with ham, carrots (ham has limited availability)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pasta', 'Small', 6.00, '2024-12-02 19:15:00');
+(1, 'pasta', 'Small', 6.60, '2024-12-02 19:15:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
-(2, (SELECT id FROM ingredients WHERE name = 'eggs'));
+(2, (SELECT id FROM ingredients WHERE name = 'ham')),
+(2, (SELECT id FROM ingredients WHERE name = 'carrots'));
 
 -- User 2: 1 Medium + 1 Large dish
--- Order 3: Medium salad with carrots, potatoes, eggs (using unlimited ingredients)
+-- Order 3: Medium salad with olives, tuna, eggs, carrots, potatoes (tuna requires olives, max 5 ingredients)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'salad', 'Medium', 8.30, '2024-12-03 13:45:00');
+(2, 'salad', 'Medium', 10.60, '2024-12-03 13:45:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
+(3, (SELECT id FROM ingredients WHERE name = 'olives')),
+(3, (SELECT id FROM ingredients WHERE name = 'tuna')),
+(3, (SELECT id FROM ingredients WHERE name = 'eggs')),
 (3, (SELECT id FROM ingredients WHERE name = 'carrots')),
-(3, (SELECT id FROM ingredients WHERE name = 'potatoes')),
-(3, (SELECT id FROM ingredients WHERE name = 'eggs'));
+(3, (SELECT id FROM ingredients WHERE name = 'potatoes'));
 
--- Order 4: Large pizza with parmesan (using unlimited ingredients but respecting dependencies)
--- Note: parmesan requires mozzarella, mozzarella requires tomatoes, tomatoes require olives
+-- Order 4: Large pizza with mushrooms, anchovies, eggs, carrots, potatoes, parmesan, mozzarella
+-- Note: this violates incompatibilities, so let's use: mushrooms, anchovies, carrots, potatoes, parmesan, mozzarella, tomatoes
+-- Wait, parmesan requires mozzarella, mozzarella requires tomatoes, tomatoes require olives
+-- And olives are incompatible with anchovies, so we can't have both
+-- Let's use: olives, tomatoes, mozzarella, parmesan, mushrooms, carrots, potatoes (7 ingredients for Large)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'pizza', 'Large', 11.60, '2024-12-03 20:00:00');
+(2, 'pizza', 'Large', 14.30, '2024-12-03 20:00:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (4, (SELECT id FROM ingredients WHERE name = 'olives')),
 (4, (SELECT id FROM ingredients WHERE name = 'tomatoes')),
-(4, (SELECT id FROM ingredients WHERE name = 'parmesan'));
+(4, (SELECT id FROM ingredients WHERE name = 'mozzarella')),
+(4, (SELECT id FROM ingredients WHERE name = 'parmesan')),
+(4, (SELECT id FROM ingredients WHERE name = 'mushrooms')),
+(4, (SELECT id FROM ingredients WHERE name = 'carrots')),
+(4, (SELECT id FROM ingredients WHERE name = 'potatoes'));
 
 -- Do NOT update ingredient availability since these are pre-loaded orders
--- The application starts with the availability amounts stated in the text for testing
+-- The application starts with the availability amounts stated in the text for testing:
+-- mozzarella: 3, ham: 2, tuna: 2, mushrooms: 3, anchovies: 1
+-- All other ingredients are unlimited
 
 -- Create indexes for better performance
 CREATE INDEX idx_orders_user_id ON orders(user_id);
