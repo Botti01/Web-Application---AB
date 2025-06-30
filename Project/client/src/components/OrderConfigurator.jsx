@@ -57,11 +57,12 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
         total_price: totalPrice
       };
 
-      await API.createOrder(orderData);
+      // Only call the callback, don't create the order here
+      await onSubmitOrder(orderData);
+      
       // Reset selection after successful order
       setSelectedIngredients([]);
       showMessage('Order placed successfully!', 'success');
-      onSubmitOrder(orderData);
     } catch (error) {
       const errorMsg = error.error || error.message || 'Error placing order';
       showMessage(errorMsg, 'danger');
