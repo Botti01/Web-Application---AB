@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import API from '../API';
 
 function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngredients, ingredients, onSubmitOrder, showMessage, user }) {
   const [totalPrice, setTotalPrice] = useState(0);
   const [validationError, setValidationError] = useState('');
+  const navigate = useNavigate();
 
   //-----------------------------------------------------------------------------
   // Calculate total price when dish or ingredients change
@@ -45,9 +47,15 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
   }, [selectedDish, selectedIngredients]);
 
   //-----------------------------------------------------------------------------
-  // Handle order submission
+  // Handle order submission or redirect to login
   const handleSubmitOrder = async () => {
-    if (!selectedDish || !user) return;
+    if (!user) {
+      // Redirect to login page if user is not authenticated
+      navigate('/login');
+      return;
+    }
+
+    if (!selectedDish) return;
 
     try {
       const orderData = {
@@ -182,19 +190,20 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               {/* Submit Button */}
               <div className="d-grid flex-shrink-0">
                 <Button
-                  variant="primary"
+                  variant={!user ? "outline-primary" : "primary"}
                   size="lg"
-                  disabled={!user || validationError}
+                  disabled={validationError && user}
                   onClick={handleSubmitOrder}
                   className="fw-bold"
                 >
-                  <i className="bi bi-cart-check me-2"></i>
-                  {!user ? 'Login Required' : 'Place Order'}
+                  <i className={`bi ${!user ? 'bi-box-arrow-in-right' : 'bi-cart-check'} me-2`}></i>
+                  {!user ? 'Login to Order' : 'Place Order'}
                 </Button>
               </div>
 
               {!user && (
                 <small className="text-muted d-block text-center mt-2 flex-shrink-0">
+                  <i className="bi bi-info-circle me-1"></i>
                   You need to be logged in to place an order
                 </small>
               )}
