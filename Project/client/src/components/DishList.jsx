@@ -20,6 +20,14 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
     refreshDishes();
   }, [setDishes, showMessage]);
 
+  // Reset selections when selectedDish becomes null (after order completion)
+  useEffect(() => {
+    if (!selectedDish) {
+      setSelectedDishType('');
+      setSelectedSize('');
+    }
+  }, [selectedDish]);
+
   // Get unique dish types
   const dishTypes = [...new Set(dishes.map(dish => dish.name))];
   
@@ -34,10 +42,15 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
   // Handle dish type selection
   const handleDishTypeSelect = (type) => {
     setSelectedDishType(type);
-    // Reset size selection when changing dish type
-    setSelectedSize('');
-    // Clear the selected dish since no size is selected
-    onSelectDish(null);
+    // Don't reset size selection when changing dish type
+    // If size is already selected, update the dish selection immediately
+    if (selectedSize) {
+      const dishData = getSelectedDishData(type, selectedSize);
+      if (dishData) {
+        onSelectDish(dishData);
+      }
+    }
+    // Don't auto-select Medium anymore - let user choose explicitly
   };
 
   // Handle size selection
@@ -52,15 +65,21 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
     }
   };
 
-  // Group dishes by name for display - keeping original structure
-  const groupedDishes = dishes.reduce((acc, dish) => {
-    if (!acc[dish.name]) {
-      acc[dish.name] = [];
+  // Get max ingredients for display when no dish is selected
+  const getMaxIngredientsForDisplay = (dishType, size) => {
+    if (dishType && size) {
+      const dish = dishes.find(d => d.name === dishType && d.size === size);
+      return dish ? dish.max_ingredients : 0;
     }
-    acc[dish.name].push(dish);
-    return acc;
-  }, {});
+    // When no specific dish is selected, show max ingredients for the size across all dish types
+    if (size) {
+      const dish = dishes.find(d => d.size === size);
+      return dish ? dish.max_ingredients : 0;
+    }
+    return 0;
+  };
 
+  //-----------------------------------------------------------------------------
   // Render the list of dishes
   return (
     <div>
@@ -118,53 +137,54 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
           </ListGroup>
         </Card>
 
-        {/* Size selection - show when dish type is selected */}
-        {(
-          <Card className="border-0">
-            <Card.Header style={{ backgroundColor: '#e9ecef' }}>
-              <h6 className="mb-0 text-capitalize fw-bold">
-                <i className="bi bi-arrows-angle-expand me-2"></i>
-                Choose Size for {selectedDishType}
-              </h6>
-            </Card.Header>
-            <ListGroup variant="flush">
-              {sizes.map(size => {
-                const isSelected = selectedSize === size;
-                const dishData = getSelectedDishData(selectedDishType, size);
-                return (
-                  <ListGroup.Item
-                    key={size}
-                    className="d-flex justify-content-between align-items-center border-0"
-                    style={{ 
-                      cursor: 'pointer',
-                      background: isSelected 
-                        ? 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)'
-                        : '#ffffff',
-                      color: isSelected ? 'white' : 'inherit'
-                    }}
-                    onClick={() => handleSizeSelect(size)}
-                  >
-                    <div>
-                      <div className="fw-bold fs-6 mb-1">{size} {selectedDishType}</div>
-                      <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
-                        <i className="bi bi-plus-circle me-1"></i>
-                        Max {dishData?.max_ingredients || 0} ingredients
-                      </div>
+        {/* Size selection - always show */}
+        <Card className="border-0">
+          <Card.Header style={{ backgroundColor: '#e9ecef' }}>
+            <h6 className="mb-0 text-capitalize fw-bold">
+              <i className="bi bi-arrows-angle-expand me-2"></i>
+              {selectedDishType ? `Choose Size for ${selectedDishType}` : 'Choose Size'}
+            </h6>
+          </Card.Header>
+          <ListGroup variant="flush">
+            {sizes.map(size => {
+              const isSelected = selectedSize === size;
+              const dishData = selectedDishType ? getSelectedDishData(selectedDishType, size) : null;
+              const maxIngredients = getMaxIngredientsForDisplay(selectedDishType, size);
+              return (
+                <ListGroup.Item
+                  key={size}
+                  className="d-flex justify-content-between align-items-center border-0"
+                  style={{ 
+                    cursor: 'pointer',
+                    background: isSelected 
+                      ? 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)'
+                      : '#ffffff',
+                    color: isSelected ? 'white' : 'inherit'
+                  }}
+                  onClick={() => handleSizeSelect(size)}
+                >
+                  <div>
+                    <div className="fw-bold fs-6 mb-1">
+                      {size} {selectedDishType || 'dish'}
                     </div>
-                    <div className="text-end">
-                      <Badge 
-                        bg={isSelected ? "warning" : "success"} 
-                        className={`${isSelected ? 'text-dark' : 'text-white'}`}
-                      >
-                        €{dishData?.price?.toFixed(2) || '0.00'}
-                      </Badge>
+                    <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
+                      <i className="bi bi-plus-circle me-1"></i>
+                      Max {maxIngredients} ingredients
                     </div>
-                  </ListGroup.Item>
-                );
-              })}
-            </ListGroup>
-          </Card>
-        )}
+                  </div>
+                  <div className="text-end">
+                    <Badge 
+                      bg={isSelected ? "warning" : "success"} 
+                      className={`${isSelected ? 'text-dark' : 'text-white'}`}
+                    >
+                      {dishData ? `€${dishData.price.toFixed(2)}` : 'Select dish type'}
+                    </Badge>
+                  </div>
+                </ListGroup.Item>
+              );
+            })}
+          </ListGroup>
+        </Card>
       </div>
     </div>
   );
