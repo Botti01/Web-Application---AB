@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { ListGroup, Badge, Button, Card, Alert } from 'react-bootstrap';
+import { ListGroup, Badge, Button, Card, Alert, Modal } from 'react-bootstrap';
 import API from '../API';
 
 function OrderHistory({ orders, setOrders, showMessage, user, onCancelOrder }) {
+  const [showModal, setShowModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
 
   //-----------------------------------------------------------------------------
   // Load orders on mount and when user changes
@@ -46,6 +48,41 @@ function OrderHistory({ orders, setOrders, showMessage, user, onCancelOrder }) {
   const sortedOrders = [...orders].sort((a, b) => 
     dayjs(b.order_date).unix() - dayjs(a.order_date).unix()
   );
+
+  //-----------------------------------------------------------------------------
+  // Handle order cancellation confirmation
+  const handleCancelOrderClick = (order) => {
+    setOrderToCancel(order);
+    setShowModal(true);
+  };
+
+  //-----------------------------------------------------------------------------
+  // Handle confirmed order cancellation
+  const handleConfirmCancel = async () => {
+    if (!orderToCancel) return;
+
+    try {
+      await API.cancelOrder(orderToCancel.id);
+      showMessage('Order cancelled successfully!', 'success');
+      // Refresh orders after cancellation
+      const ordersData = await API.getOrders();
+      setOrders(ordersData);
+      if (onCancelOrder) onCancelOrder(orderToCancel.id);
+    } catch (error) {
+      const errorMsg = error.error || error.message || 'Error cancelling order';
+      showMessage(errorMsg, 'danger');
+    } finally {
+      setShowModal(false);
+      setOrderToCancel(null);
+    }
+  };
+
+  //-----------------------------------------------------------------------------
+  // Handle modal close
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setOrderToCancel(null);
+  };
 
   //-----------------------------------------------------------------------------
   // Render the order history
@@ -91,7 +128,7 @@ function OrderHistory({ orders, setOrders, showMessage, user, onCancelOrder }) {
                         <Button
                           variant="outline-danger"
                           size="sm"
-                          onClick={() => handleCancelOrder(order.id)}
+                          onClick={() => handleCancelOrderClick(order)}
                           style={{ fontSize: '0.7rem', padding: '2px 6px' }}
                         >
                           <i className="bi bi-x-circle me-1"></i>Cancel
@@ -134,6 +171,60 @@ function OrderHistory({ orders, setOrders, showMessage, user, onCancelOrder }) {
           </ListGroup>
         </div>
       )}
+
+      {/* Cancel confirmation modal */}
+      <Modal show={showModal} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton style={{ background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)', color: 'white', border: 'none' }}>
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            Confirm Order Cancellation
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {orderToCancel && (
+            <div>
+              <p className="mb-3">Are you sure you want to cancel this order? This action cannot be undone.</p>
+              <div className="bg-light p-3 rounded">
+                <div className="fw-bold text-capitalize mb-2">
+                  <i className="bi bi-receipt me-1"></i>
+                  {orderToCancel.dish_size} {orderToCancel.dish_name}
+                </div>
+                <div className="text-muted small mb-2">
+                  <i className="bi bi-calendar me-1"></i>
+                  {dayjs(orderToCancel.order_date).format('MMM DD, YYYY HH:mm')}
+                </div>
+                <div className="fw-bold text-success">
+                  Total: €{parseFloat(orderToCancel.total_price).toFixed(2)}
+                </div>
+                {orderToCancel.ingredients && orderToCancel.ingredients.length > 0 && (
+                  <div className="mt-2">
+                    <small className="text-muted">Ingredients: </small>
+                    {orderToCancel.ingredients.map((ingredient, index) => (
+                      <Badge 
+                        key={index}
+                        bg="secondary" 
+                        className="me-1"
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        {ingredient}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0">
+          <Button variant="outline-secondary" onClick={handleCloseModal} style={{ borderRadius: '20px' }}>
+            Keep Order
+          </Button>
+          <Button variant="danger" onClick={handleConfirmCancel} style={{ borderRadius: '20px' }}>
+            <i className="bi bi-x-circle me-1"></i>
+            Cancel Order
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
