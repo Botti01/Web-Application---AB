@@ -5,7 +5,7 @@ import API from '../API';
 function IngredientList({ ingredients, setIngredients, selectedIngredients, onToggleIngredient, showMessage, disabled = false }) {
 
   //-----------------------------------------------------------------------------
-  // Load ingredients on mount
+  // Load ingredients on mount and when ingredients prop changes
   useEffect(() => {
     const refreshIngredients = async () => {
       try {
@@ -18,6 +18,26 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     
     refreshIngredients();
   }, [setIngredients, showMessage]);
+
+  // Additional effect to handle when ingredients are updated externally
+  useEffect(() => {
+    // Check if any selected ingredients are no longer available
+    const unavailableSelected = selectedIngredients.filter(selectedId => {
+      const ingredient = ingredients.find(ing => ing.id === selectedId);
+      return ingredient && ingredient.current_availability !== null && ingredient.current_availability <= 0;
+    });
+    
+    // If any selected ingredients are no longer available, remove them
+    if (unavailableSelected.length > 0) {
+      unavailableSelected.forEach(ingredientId => {
+        const ingredient = ingredients.find(ing => ing.id === ingredientId);
+        if (ingredient) {
+          showMessage(`${ingredient.name} is no longer available and has been removed from your selection`, 'warning');
+          onToggleIngredient(ingredientId);
+        }
+      });
+    }
+  }, [ingredients, selectedIngredients, onToggleIngredient, showMessage]);
 
   //-----------------------------------------------------------------------------
   // Helper function to check if ingredient is available

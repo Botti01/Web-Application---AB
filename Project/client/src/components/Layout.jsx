@@ -90,7 +90,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
   const handleSubmitOrder = async (orderData) => {
     try {
       await API.createOrder(orderData);
-      // Reset selection after successful order
+      // Reset dish selection after successful order
       setSelectedDish(null);
       setSelectedIngredients([]);
       showMessage('Order placed successfully!', 'success');
@@ -99,15 +99,26 @@ function OrderConfigurationLayout({ user, showMessage }) {
       const updatedIngredients = await API.getIngredients();
       setIngredients(updatedIngredients);
       
-      // Refresh orders to show the new order
+      // Refresh orders list
       if (user) {
         const updatedOrders = await API.getOrders();
         setOrders(updatedOrders);
       }
     } catch (error) {
+      // On error, reset ingredients selection and refresh availability
+      setSelectedIngredients([]);
+      
+      // Refresh ingredients to show updated availability
+      try {
+        const updatedIngredients = await API.getIngredients();
+        setIngredients(updatedIngredients);
+      } catch (refreshError) {
+        console.error('Error refreshing ingredients:', refreshError);
+      }
+      
       const errorMsg = error.error || error.message || 'Error placing order';
       showMessage(errorMsg, 'danger');
-      throw error; // Re-throw to handle in component
+      throw error;
     }
   };
 

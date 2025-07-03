@@ -123,14 +123,16 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
                       Available in all sizes
                     </div>
                   </div>
-                  <div className="text-end">
-                    <Badge 
-                      bg={isSelected ? "warning" : "success"} 
-                      className={`${isSelected ? 'text-dark' : 'text-white'}`}
-                    >
-                      {isSelected ? 'Selected' : 'Available'}
-                    </Badge>
-                  </div>
+                  {isSelected && (
+                    <div className="text-end">
+                      <Badge 
+                        bg="warning" 
+                        className="text-dark"
+                      >
+                        Selected
+                      </Badge>
+                    </div>
+                  )}
                 </ListGroup.Item>
               );
             })}
@@ -177,7 +179,11 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
                       bg={isSelected ? "warning" : "success"} 
                       className={`${isSelected ? 'text-dark' : 'text-white'}`}
                     >
-                      {dishData ? `€${dishData.price.toFixed(2)}` : 'Select dish type'}
+                      {dishData ? `€${dishData.price.toFixed(2)}` : (
+                        dishes.find(d => d.size === size) ? 
+                          `€${dishes.find(d => d.size === size).price.toFixed(2)}` : 
+                          'Select dish type'
+                      )}
                     </Badge>
                   </div>
                 </ListGroup.Item>
