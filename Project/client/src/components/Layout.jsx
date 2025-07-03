@@ -181,27 +181,10 @@ function OrderConfigurationLayout({ user, showMessage }) {
     }
   };
 
-  // Handle ingredient selection toggle with dependency checking
+  // Handle ingredient selection toggle - simplified since constraints are handled in IngredientList
   const handleToggleIngredient = (ingredientId) => {
-    if (!selectedDish) {
-      showMessage('Please select a dish first before adding ingredients', 'warning');
-      return;
-    }
-    
     setSelectedIngredients(prev => {
       if (prev.includes(ingredientId)) {
-        // Check if removing this ingredient would break dependencies for others
-        const ingredient = ingredients.find(ing => ing.id === ingredientId);
-        const wouldBreakDependencies = prev.some(otherIngredientId => {
-          if (otherIngredientId === ingredientId) return false;
-          const otherIngredient = ingredients.find(ing => ing.id === otherIngredientId);
-          return otherIngredient?.dependencies?.includes(ingredient.name);
-        });
-
-        if (wouldBreakDependencies) {
-          showMessage(`Cannot remove ${ingredient.name} as it's required by other selected ingredients`, 'warning');
-          return prev;
-        }
         return prev.filter(id => id !== ingredientId);
       } else {
         // Check if we can add more ingredients based on selected dish
@@ -209,28 +192,6 @@ function OrderConfigurationLayout({ user, showMessage }) {
           showMessage(`Maximum ${selectedDish.max_ingredients} ingredients allowed for ${selectedDish.size} ${selectedDish.name}`, 'warning');
           return prev;
         }
-
-        // Check if all dependencies are already selected
-        const ingredient = ingredients.find(ing => ing.id === ingredientId);
-        const missingDependencies = ingredient.dependencies?.filter(depName => {
-          const depIngredient = ingredients.find(ing => ing.name === depName);
-          return !prev.includes(depIngredient.id);
-        }) || [];
-
-        if (missingDependencies.length > 0) {
-          showMessage(`${ingredient.name} requires: ${missingDependencies.join(', ')}. Please add them first.`, 'warning');
-          return prev;
-        }
-
-        // Check incompatibilities
-        for (const selectedId of prev) {
-          const selectedIngredient = ingredients.find(ing => ing.id === selectedId);
-          if (selectedIngredient && selectedIngredient.incompatibilities?.includes(ingredient.name)) {
-            showMessage(`${ingredient.name} is incompatible with ${selectedIngredient.name}`, 'warning');
-            return prev;
-          }
-        }
-
         return [...prev, ingredientId];
       }
     });

@@ -5,7 +5,7 @@ import API from '../API';
 function IngredientList({ ingredients, setIngredients, selectedIngredients, onToggleIngredient, showMessage, disabled = false }) {
 
   //-----------------------------------------------------------------------------
-  // Load ingredients on mount and when ingredients prop changes
+  // Load ingredients on mount
   useEffect(() => {
     const refreshIngredients = async () => {
       try {
@@ -46,41 +46,112 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   };
 
   //-----------------------------------------------------------------------------
-  // Helper function to check if ingredient can be selected
-  const canSelectIngredient = (ingredient) => {
-    if (disabled) return false;
-    if (!isIngredientAvailable(ingredient)) return false;
-    
-    const isSelected = selectedIngredients.includes(ingredient.id);
-    if (isSelected) {
-      // Check if removing this ingredient would break dependencies for others
-      const wouldBreakDependencies = selectedIngredients.some(otherIngredientId => {
-        if (otherIngredientId === ingredient.id) return false;
-        const otherIngredient = ingredients.find(ing => ing.id === otherIngredientId);
-        return otherIngredient?.dependencies?.includes(ingredient.name);
-      });
-      return !wouldBreakDependencies;
-    }
-    
-    // For adding: check if all dependencies are already selected
+  // Helper function to check constraints when trying to add an ingredient
+  const checkConstraintsForAdding = (ingredient) => {
+    // Check if all dependencies are already selected
     const missingDependencies = ingredient.dependencies?.filter(depName => {
       const depIngredient = ingredients.find(ing => ing.name === depName);
       return !selectedIngredients.includes(depIngredient?.id);
     }) || [];
-    
+
     if (missingDependencies.length > 0) {
-      return false; // Cannot select if dependencies are missing
+      return {
+        canAdd: false,
+        message: `${ingredient.name} requires these ingredients first: ${missingDependencies.join(', ')}`
+      };
     }
-    
-    // Check incompatibilities
+
+    // Check incompatibilities with already selected ingredients
     for (const selectedId of selectedIngredients) {
       const selectedIngredient = ingredients.find(ing => ing.id === selectedId);
       if (selectedIngredient && selectedIngredient.incompatibilities?.includes(ingredient.name)) {
-        return false;
+        return {
+          canAdd: false,
+          message: `${ingredient.name} is incompatible with ${selectedIngredient.name}. Remove ${selectedIngredient.name} first.`
+        };
       }
     }
-    
-    return true;
+
+    // Check if ingredient has incompatibilities with selected ingredients
+    if (ingredient.incompatibilities && ingredient.incompatibilities.length > 0) {
+      const selectedIncompatible = ingredient.incompatibilities.find(incompatibleName => {
+        const incompatibleIngredient = ingredients.find(ing => ing.name === incompatibleName);
+        return incompatibleIngredient && selectedIngredients.includes(incompatibleIngredient.id);
+      });
+
+      if (selectedIncompatible) {
+        return {
+          canAdd: false,
+          message: `${ingredient.name} is incompatible with ${selectedIncompatible}. Remove ${selectedIncompatible} first.`
+        };
+      }
+    }
+
+    return { canAdd: true, message: null };
+  };
+
+  //-----------------------------------------------------------------------------
+  // Helper function to check if removing an ingredient would break dependencies
+  const checkConstraintsForRemoving = (ingredient) => {
+    const wouldBreakDependencies = selectedIngredients.some(otherIngredientId => {
+      if (otherIngredientId === ingredient.id) return false;
+      const otherIngredient = ingredients.find(ing => ing.id === otherIngredientId);
+      return otherIngredient?.dependencies?.includes(ingredient.name);
+    });
+
+    if (wouldBreakDependencies) {
+      const dependentIngredients = selectedIngredients
+        .filter(otherId => otherId !== ingredient.id)
+        .map(otherId => ingredients.find(ing => ing.id === otherId))
+        .filter(ing => ing?.dependencies?.includes(ingredient.name))
+        .map(ing => ing.name);
+
+      return {
+        canRemove: false,
+        message: `Cannot remove ${ingredient.name} because it's required by: ${dependentIngredients.join(', ')}`
+      };
+    }
+
+    return { canRemove: true, message: null };
+  };
+
+  //-----------------------------------------------------------------------------
+  // Handle ingredient button click
+  const handleIngredientClick = (ingredient) => {
+    if (disabled) {
+      showMessage('Please select a dish first before adding ingredients', 'warning');
+      return;
+    }
+
+    const isSelected = selectedIngredients.includes(ingredient.id);
+
+    if (isSelected) {
+      // Trying to remove ingredient - check if it would break dependencies
+      const constraints = checkConstraintsForRemoving(ingredient);
+      if (!constraints.canRemove) {
+        showMessage(constraints.message, 'warning');
+        return;
+      }
+      // Remove ingredient
+      onToggleIngredient(ingredient.id);
+    } else {
+      // Trying to add ingredient - check all constraints
+      const constraints = checkConstraintsForAdding(ingredient);
+      if (!constraints.canAdd) {
+        showMessage(constraints.message, 'warning');
+        return;
+      }
+      // Add ingredient
+      onToggleIngredient(ingredient.id);
+    }
+  };
+
+  //-----------------------------------------------------------------------------
+  // Helper function to determine if button should be disabled
+  const isButtonDisabled = (ingredient) => {
+    if (disabled) return true;
+    if (!isIngredientAvailable(ingredient)) return true;
+    return false; // Button is always enabled for available ingredients
   };
 
   //-----------------------------------------------------------------------------
@@ -95,24 +166,6 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     if (ingredient.incompatibilities && ingredient.incompatibilities.length > 0) {
       constraints.push(`Incompatible with: ${ingredient.incompatibilities.join(', ')}`);
     }
-    
-    // if (ingredient.current_availability !== null) {
-    //   constraints.push(`Available: ${ingredient.current_availability}`);
-    // } else {
-    //   constraints.push('Unlimited availability');
-    // }
-
-    // // Add selection hint for dependencies
-    // const isSelected = selectedIngredients.includes(ingredient.id);
-    // if (!isSelected && ingredient.dependencies && ingredient.dependencies.length > 0) {
-    //   const missingDependencies = ingredient.dependencies.filter(depName => {
-    //     const depIngredient = ingredients.find(ing => ing.name === depName);
-    //     return !selectedIngredients.includes(depIngredient?.id);
-    //   });
-    //   if (missingDependencies.length > 0) {
-    //     constraints.push(`⚠️ Add first: ${missingDependencies.join(', ')}`);
-    //   }
-    // }
     
     return constraints.join('\n');
   };
@@ -141,13 +194,13 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
       <ListGroup variant="flush" className="shadow-sm">
         {ingredients.map(ingredient => {
           const isSelected = selectedIngredients.includes(ingredient.id);
-          const canSelect = canSelectIngredient(ingredient);
           const isAvailable = isIngredientAvailable(ingredient);
+          const buttonDisabled = isButtonDisabled(ingredient);
           
           return (
             <ListGroup.Item
               key={ingredient.id}
-              className="d-flex justify-content-between align-items-center border-0"
+              className="border-0 py-2 px-3"
               style={{ 
                 background: isSelected 
                   ? 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
@@ -156,43 +209,45 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
                 opacity: disabled ? 0.6 : 1
               }}
             >
-              <div className="flex-grow-1">
-                <div className="fw-bold fs-6 mb-1">
-                  {ingredient.name}
-                  {(ingredient.dependencies?.length > 0 || ingredient.incompatibilities?.length > 0) && (
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={<Tooltip>{getTooltipContent(ingredient)}</Tooltip>}
-                    >
-                      <i className={`bi bi-info-circle ms-2 ${isSelected ? 'text-light' : 'text-muted'}`}></i>
-                    </OverlayTrigger>
-                  )}
+              <div className="d-flex justify-content-between align-items-center">
+                <div className="flex-grow-1">
+                  <div className="fw-bold fs-6 mb-1">
+                    {ingredient.name}
+                    {(ingredient.dependencies?.length > 0 || ingredient.incompatibilities?.length > 0) && (
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={<Tooltip>{getTooltipContent(ingredient)}</Tooltip>}
+                      >
+                        <i className={`bi bi-info-circle ms-2 ${isSelected ? 'text-light' : 'text-muted'}`}></i>
+                      </OverlayTrigger>
+                    )}
+                  </div>
+                  <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
+                    <span>€{ingredient.price.toFixed(2)}</span>
+                    {ingredient.current_availability !== null && (
+                      <span className="ms-2">
+                        <i className="bi bi-box me-1"></i>
+                        {ingredient.current_availability} left
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
-                  <span>€{ingredient.price.toFixed(2)}</span>
-                  {ingredient.current_availability !== null && (
-                    <span className="ms-2">
-                      <i className="bi bi-box me-1"></i>
-                      {ingredient.current_availability} left
-                    </span>
-                  )}
+                
+                <div className="text-end">
+                  <Button
+                    variant={isSelected ? "warning" : "outline-success"}
+                    size="sm"
+                    disabled={buttonDisabled}
+                    onClick={() => handleIngredientClick(ingredient)}
+                    className={isSelected ? 'text-dark' : ''}
+                  >
+                    {isSelected ? (
+                      <><i className="bi bi-dash-circle me-1"></i>Remove</>
+                    ) : (
+                      <><i className="bi bi-plus-circle me-1"></i>Add</>
+                    )}
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="text-end">
-                <Button
-                  variant={isSelected ? "warning" : "outline-success"}
-                  size="sm"
-                  disabled={!canSelect || disabled}
-                  onClick={() => onToggleIngredient(ingredient.id)}
-                  className={isSelected ? 'text-dark' : ''}
-                >
-                  {isSelected ? (
-                    <><i className="bi bi-dash-circle me-1"></i>Remove</>
-                  ) : (
-                    <><i className="bi bi-plus-circle me-1"></i>Add</>
-                  )}
-                </Button>
               </div>
             </ListGroup.Item>
           );
