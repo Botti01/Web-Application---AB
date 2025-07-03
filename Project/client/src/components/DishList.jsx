@@ -20,7 +20,7 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
     refreshDishes();
   }, [setDishes, showMessage]);
 
-  // Reset selections when selectedDish becomes null (after order completion)
+  // Reset selections when selectedDish becomes null (after order completion or logout)
   useEffect(() => {
     if (!selectedDish) {
       setSelectedDishType('');

@@ -72,7 +72,7 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
       setSelectedIngredients([]);
       showMessage('Order placed successfully!', 'success');
     } catch (error) {
-      // Don't reset ingredients here - let the Layout handle it
+      // Don't reset ingredients here - let the Layout handle selective removal
       // Don't show success message on error
       const errorMsg = error.error || error.message || 'Error placing order';
       showMessage(errorMsg, 'danger');
@@ -91,9 +91,15 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
   // Render the order configurator
   return (
     <div className="h-100 d-flex flex-column">
-      {/* Header for the configurator section */}
-      <div className="p-3 rounded-top text-white shadow-sm" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #7c2d12 0%, #ea580c 100%)', flexShrink: 0 }}>
+      {/* Header for the configurator section with total price */}
+      <div className="p-3 rounded-top text-white shadow-sm d-flex justify-content-between align-items-center" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #7c2d12 0%, #ea580c 100%)', flexShrink: 0 }}>
         <h5 className="mb-0 fw-bold"><i className="bi bi-cart3 me-2"></i> Order Configuration</h5>
+        {selectedDish && (
+          <div className="text-end p-2 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '2px solid #fbbf24' }}>
+            <div className="fw-bold text-warning" style={{ fontSize: '2.2rem', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>€{totalPrice.toFixed(2)}</div>
+            <small className="text-warning fw-bold" style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Price</small>
+          </div>
+        )}
       </div>
 
       <Card className="shadow-sm border-0 flex-grow-1 d-flex flex-column" style={{ borderRadius: '0 0 15px 15px' }}>
@@ -174,20 +180,6 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
                   {validationError}
                 </Alert>
               )}
-
-              {/* Total Price */}
-              <div className="mb-3 p-3 bg-light rounded flex-shrink-0">
-                <Row className="align-items-center">
-                  <Col>
-                    <h5 className="mb-0 fw-bold">
-                      <i className="bi bi-calculator me-2"></i>Total Price
-                    </h5>
-                  </Col>
-                  <Col xs="auto">
-                    <h4 className="mb-0 text-primary fw-bold">€{totalPrice.toFixed(2)}</h4>
-                  </Col>
-                </Row>
-              </div>
 
               {/* Submit Button */}
               <div className="d-grid flex-shrink-0">

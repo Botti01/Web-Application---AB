@@ -19,7 +19,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     refreshIngredients();
   }, [setIngredients, showMessage]);
 
-  // Additional effect to handle when ingredients are updated externally
+  // Enhanced effect to handle when ingredients are updated externally
   useEffect(() => {
     // Check if any selected ingredients are no longer available
     const unavailableSelected = selectedIngredients.filter(selectedId => {
@@ -27,17 +27,17 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
       return ingredient && ingredient.current_availability !== null && ingredient.current_availability <= 0;
     });
     
-    // If any selected ingredients are no longer available, remove them
+    // If any selected ingredients are no longer available, remove them automatically
     if (unavailableSelected.length > 0) {
       unavailableSelected.forEach(ingredientId => {
         const ingredient = ingredients.find(ing => ing.id === ingredientId);
         if (ingredient) {
-          showMessage(`${ingredient.name} is no longer available and has been removed from your selection`, 'warning');
-          onToggleIngredient(ingredientId);
+          // Use onToggleIngredient to remove the ingredient (this will trigger the removal logic)
+          setTimeout(() => onToggleIngredient(ingredientId), 0);
         }
       });
     }
-  }, [ingredients, selectedIngredients, onToggleIngredient, showMessage]);
+  }, [ingredients]); // Only depend on ingredients, not selectedIngredients to avoid infinite loops
 
   //-----------------------------------------------------------------------------
   // Helper function to check if ingredient is available

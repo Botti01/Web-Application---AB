@@ -67,6 +67,14 @@ function OrderConfigurationLayout({ user, showMessage }) {
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [orders, setOrders] = useState([]);
 
+  // Reset selections when user logs out
+  useEffect(() => {
+    if (!user) {
+      setSelectedDish(null);
+      setSelectedIngredients([]);
+    }
+  }, [user]);
+
   // Load orders when user changes
   useEffect(() => {
     const loadOrders = async () => {
@@ -105,15 +113,50 @@ function OrderConfigurationLayout({ user, showMessage }) {
         setOrders(updatedOrders);
       }
     } catch (error) {
-      // On error, reset ingredients selection and refresh availability
-      setSelectedIngredients([]);
-      
-      // Refresh ingredients to show updated availability
-      try {
-        const updatedIngredients = await API.getIngredients();
-        setIngredients(updatedIngredients);
-      } catch (refreshError) {
-        console.error('Error refreshing ingredients:', refreshError);
+      // Check if the error contains information about unavailable ingredients
+      if (error.error && error.error.includes('unavailable')) {
+        // Try to extract ingredient names from the error message
+        const errorMessage = error.error;
+        
+        // Refresh ingredients to get updated availability
+        try {
+          const updatedIngredients = await API.getIngredients();
+          setIngredients(updatedIngredients);
+          
+          // Remove only unavailable ingredients from selection
+          setSelectedIngredients(prevSelected => {
+            const availableIngredients = prevSelected.filter(ingredientId => {
+              const ingredient = updatedIngredients.find(ing => ing.id === ingredientId);
+              // Keep ingredient if it's still available (null means unlimited, >0 means available)
+              return ingredient && (ingredient.current_availability === null || ingredient.current_availability > 0);
+            });
+            
+            // Show message about removed ingredients
+            const removedIngredients = prevSelected.filter(id => !availableIngredients.includes(id));
+            if (removedIngredients.length > 0) {
+              const removedNames = removedIngredients.map(id => {
+                const ingredient = ingredients.find(ing => ing.id === id);
+                return ingredient ? ingredient.name : 'Unknown';
+              }).join(', ');
+              showMessage(`Some ingredients are no longer available and have been removed: ${removedNames}`, 'warning');
+            }
+            
+            return availableIngredients;
+          });
+          
+        } catch (refreshError) {
+          console.error('Error refreshing ingredients:', refreshError);
+          // Fallback: clear all ingredients if we can't refresh
+          setSelectedIngredients([]);
+        }
+      } else {
+        // For other errors, don't clear ingredients - let user retry
+        try {
+          const updatedIngredients = await API.getIngredients();
+          setIngredients(updatedIngredients);
+        } catch (refreshError) {
+          console.error('Error refreshing ingredients:', refreshError);
+        }
       }
       
       const errorMsg = error.error || error.message || 'Error placing order';
