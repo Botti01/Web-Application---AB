@@ -7,10 +7,10 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
 
   return (
     <Navbar style={{ background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)' }} variant="dark" expand="lg" fixed="top" className="shadow-lg">
-      <Container>
+      <Container fluid className="px-3">
         {/* Left side: App title and Order History button */}
         <div className="d-flex align-items-center">
-          <Navbar.Brand href="/" className="fw-bold fs-4 me-3">
+          <Navbar.Brand href="/" className="fw-bold fs-4 me-2">
             <i className="bi bi-shop me-2"></i>
             My Restaurant
           </Navbar.Brand>
@@ -24,6 +24,7 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
                   size="sm"
                   onClick={() => navigate('/')} 
                   style={{ borderRadius: '20px' }}
+                  className="ms-2"
                 >
                   <i className="bi bi-arrow-left me-1"></i>
                   Back to Menu
@@ -34,6 +35,7 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
                   size="sm"
                   onClick={() => navigate('/orders')} 
                   style={{ borderRadius: '20px' }}
+                  className="ms-2"
                 >
                   <i className="bi bi-clock-history me-1"></i>
                   Order History

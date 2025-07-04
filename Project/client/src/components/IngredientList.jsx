@@ -195,7 +195,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
       <div className="p-3 rounded-top text-white shadow-sm" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)' }}>
         <h5 className="mb-0 fw-bold">
           <i className="bi bi-basket me-2"></i> 
-          Ingredients {readOnly && <span className="small">(Browse Only)</span>}
+          Ingredients
         </h5>
       </div>
       
@@ -230,7 +230,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
                   ? 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
                   : isAvailable ? '#ffffff' : '#f3f4f6',
                 color: isSelected ? 'white' : isAvailable ? 'inherit' : '#6b7280',
-                opacity: disabled ? 0.6 : 1
+                opacity: disabled ? 0.6 : (readOnly ? 0.8 : 1)
               }}
               onClick={() => handleIngredientClick(ingredient)}
             >

@@ -105,7 +105,7 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
       <div className="p-3 rounded-top text-white shadow-sm mb-3" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)' }}>
         <h5 className="mb-0 fw-bold">
           <i className="bi bi-menu-button-wide me-2"></i> 
-          Menu {readOnly && <span className="small">(Browse Only)</span>}
+          Menu
         </h5>
       </div>
       
