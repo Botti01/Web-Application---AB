@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ListGroup, Badge, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import API from '../API';
 
-function IngredientList({ ingredients, setIngredients, selectedIngredients, onToggleIngredient, showMessage, disabled = false }) {
+function IngredientList({ ingredients, setIngredients, selectedIngredients, onToggleIngredient, showMessage, disabled = false, readOnly = false }) {
 
   //-----------------------------------------------------------------------------
   // Load ingredients on mount
@@ -118,8 +118,10 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   //-----------------------------------------------------------------------------
   // Handle ingredient button click
   const handleIngredientClick = (ingredient) => {
-    if (disabled) {
-      showMessage('Please select a dish first before adding ingredients', 'warning');
+    if (disabled || readOnly || !onToggleIngredient) {
+      if (disabled) {
+        showMessage('Please select a dish first before adding ingredients', 'warning');
+      }
       return;
     }
 
@@ -149,7 +151,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   //-----------------------------------------------------------------------------
   // Helper function to determine if button should be disabled
   const isButtonDisabled = (ingredient) => {
-    if (disabled) return true;
+    if (disabled || readOnly) return true;
     if (!isIngredientAvailable(ingredient)) return true;
     return false; // Button is always enabled for available ingredients
   };
@@ -176,11 +178,14 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     <div>
       {/* Header for the ingredients section */}
       <div className="p-3 rounded-top text-white shadow-sm" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #059669 0%, #10b981 100%)' }}>
-        <h5 className="mb-0 fw-bold"><i className="bi bi-basket me-2"></i> Ingredients</h5>
+        <h5 className="mb-0 fw-bold">
+          <i className="bi bi-basket me-2"></i> 
+          Ingredients {readOnly && <span className="small">(Browse Only)</span>}
+        </h5>
       </div>
       
-      {/* Message when no dish is selected */}
-      {disabled && (
+      {/* Message when no dish is selected (but not for read-only mode) */}
+      {disabled && !readOnly && (
         <div className="p-4 text-center bg-light border-bottom">
           <i className="bi bi-arrow-left text-muted" style={{ fontSize: '2rem' }}></i>
           <p className="text-muted mt-2 mb-0">

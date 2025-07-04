@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Button, Alert, Container } from 'react-bootstrap';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import API from '../API';
 
 import NavigationBar from './NavigationBar';
@@ -161,47 +161,51 @@ function OrderConfigurationLayout({ user, showMessage }) {
     <Container fluid>
       <Row className="g-4">
         {/* Menu Section */}
-        <Col xs={12} lg={4}>
+        <Col xs={12} lg={user ? 4 : 6}>
           <div className="sticky-top" style={{ top: '90px' }}>
             <DishList
               dishes={dishes}
               setDishes={setDishes}
-              selectedDish={selectedDish}
-              onSelectDish={setSelectedDish}
+              selectedDish={user ? selectedDish : null}
+              onSelectDish={user ? setSelectedDish : null}
               showMessage={showMessage}
-              selectedIngredients={selectedIngredients}
+              selectedIngredients={user ? selectedIngredients : []}
+              readOnly={!user}
             />
           </div>
         </Col>
 
         {/* Ingredients Section */}
-        <Col xs={12} lg={4}>
+        <Col xs={12} lg={user ? 4 : 6}>
           <div className="sticky-top" style={{ top: '90px' }}>
             <IngredientList
               ingredients={ingredients}
               setIngredients={setIngredients}
-              selectedIngredients={selectedIngredients}
-              onToggleIngredient={handleToggleIngredient}
+              selectedIngredients={user ? selectedIngredients : []}
+              onToggleIngredient={user ? handleToggleIngredient : null}
               showMessage={showMessage}
-              disabled={!selectedDish}
+              disabled={!user || !selectedDish}
+              readOnly={!user}
             />
           </div>
         </Col>
 
-        {/* Order Configuration Section */}
-        <Col xs={12} lg={4}>
-          <div className="sticky-top" style={{ top: '90px' }}>
-            <OrderConfigurator
-              selectedDish={selectedDish}
-              selectedIngredients={selectedIngredients}
-              setSelectedIngredients={setSelectedIngredients}
-              ingredients={ingredients}
-              onSubmitOrder={handleSubmitOrder}
-              showMessage={showMessage}
-              user={user}
-            />
-          </div>
-        </Col>
+        {/* Order Configuration Section - Only for authenticated users */}
+        {user && (
+          <Col xs={12} lg={4}>
+            <div className="sticky-top" style={{ top: '90px' }}>
+              <OrderConfigurator
+                selectedDish={selectedDish}
+                selectedIngredients={selectedIngredients}
+                setSelectedIngredients={setSelectedIngredients}
+                ingredients={ingredients}
+                onSubmitOrder={handleSubmitOrder}
+                showMessage={showMessage}
+                user={user}
+              />
+            </div>
+          </Col>
+        )}
       </Row>
     </Container>
   );
@@ -255,6 +259,7 @@ function OrderHistoryLayout({ user, showMessage }) {
 // --- Main Restaurant Layout ---
 function RestaurantLayout({ user, message, messageType = 'danger', onLogout, showMessage, onComplete2FA }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
@@ -280,6 +285,35 @@ function RestaurantLayout({ user, message, messageType = 'danger', onLogout, sho
                   } me-2`}></i>
                   {message}
                 </Alert>
+              </Col>
+            </Row>
+          )}
+
+          {/* Welcome message for non-authenticated users */}
+          {!user && location.pathname === "/" && (
+            <Row className="mb-4">
+              <Col>
+                <div className="card shadow-lg border-0" style={{ background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', borderRadius: '15px' }}>
+                  <div className="card-body text-center py-4">
+                    <h2 className="text-white fw-bold mb-3">
+                      <i className="bi bi-shop me-2"></i>
+                      Welcome to My Restaurant!
+                    </h2>
+                    <p className="text-white mb-3 lead">
+                      Browse our delicious menu and ingredients. Login to start building your custom order!
+                    </p>
+                    <Button 
+                      variant="light" 
+                      size="lg" 
+                      onClick={() => navigate('/login')}
+                      style={{ borderRadius: '25px' }}
+                      className="fw-bold"
+                    >
+                      <i className="bi bi-box-arrow-in-right me-2"></i>
+                      Login to Order
+                    </Button>
+                  </div>
+                </div>
               </Col>
             </Row>
           )}

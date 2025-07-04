@@ -12,7 +12,7 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
         <div className="d-flex align-items-center">
           <Navbar.Brand href="/" className="fw-bold fs-4 me-3">
             <i className="bi bi-shop me-2"></i>
-            Restaurant Orders
+            My Restaurant
           </Navbar.Brand>
           
           {/* Order History button - only show for authenticated users */}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ListGroup, Badge, Card } from 'react-bootstrap';
 import API from '../API';
 
-function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, selectedIngredients = [] }) {
+function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, selectedIngredients = [], readOnly = false }) {
   const [selectedDishType, setSelectedDishType] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
 
@@ -41,6 +41,8 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
 
   // Handle dish type selection
   const handleDishTypeSelect = (type) => {
+    if (readOnly || !onSelectDish) return;
+    
     setSelectedDishType(type);
     // Don't reset size selection when changing dish type
     // If size is already selected, update the dish selection immediately
@@ -55,6 +57,8 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
 
   // Handle size selection
   const handleSizeSelect = (size) => {
+    if (readOnly || !onSelectDish) return;
+    
     // Check if we can change to this size based on current ingredients
     if (selectedDishType && selectedIngredients.length > 0) {
       const newDishData = getSelectedDishData(selectedDishType, size);
@@ -99,7 +103,10 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
     <div>
       {/* Header for the dishes section */}
       <div className="p-3 rounded-top text-white shadow-sm mb-3" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)' }}>
-        <h5 className="mb-0 fw-bold"><i className="bi bi-menu-button-wide me-2"></i> Menu</h5>
+        <h5 className="mb-0 fw-bold">
+          <i className="bi bi-menu-button-wide me-2"></i> 
+          Menu {readOnly && <span className="small">(Browse Only)</span>}
+        </h5>
       </div>
       
       {/* Display dish types for selection */}
@@ -119,11 +126,12 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
                   key={type}
                   className="d-flex justify-content-between align-items-center border-0"
                   style={{ 
-                    cursor: 'pointer',
+                    cursor: readOnly ? 'default' : 'pointer',
                     background: isSelected 
                       ? 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)'
                       : '#ffffff',
-                    color: isSelected ? 'white' : 'inherit'
+                    color: isSelected ? 'white' : 'inherit',
+                    opacity: readOnly ? 0.8 : 1
                   }}
                   onClick={() => handleDishTypeSelect(type)}
                 >
@@ -171,11 +179,12 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
                   key={size}
                   className="d-flex justify-content-between align-items-center border-0"
                   style={{ 
-                    cursor: 'pointer',
+                    cursor: readOnly ? 'default' : 'pointer',
                     background: isSelected 
                       ? 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)'
                       : '#ffffff',
-                    color: isSelected ? 'white' : 'inherit'
+                    color: isSelected ? 'white' : 'inherit',
+                    opacity: readOnly ? 0.8 : 1
                   }}
                   onClick={() => handleSizeSelect(size)}
                 >
