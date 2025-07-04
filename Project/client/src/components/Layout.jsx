@@ -169,6 +169,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
               selectedDish={selectedDish}
               onSelectDish={setSelectedDish}
               showMessage={showMessage}
+              selectedIngredients={selectedIngredients}
             />
           </div>
         </Col>

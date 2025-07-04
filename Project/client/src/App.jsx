@@ -30,6 +30,8 @@ function App() {
   const [message, setMessage] = useState('');
   // Type of message to display (success, warning, danger)
   const [messageType, setMessageType] = useState('danger');
+  // Reference to the current message timeout
+  const [messageTimeoutRef, setMessageTimeoutRef] = useState(null);
 
   const navigate = useNavigate();
 
@@ -136,9 +138,17 @@ function App() {
   //----------------------------------------------------------------------------
   // Global message handler
   const showMessage = (msg, type = 'danger') => {
+    // Clear any existing timeout to prevent it from clearing the new message
+    if (messageTimeoutRef) {
+      clearTimeout(messageTimeoutRef);
+    }
+    
     setMessage(msg);
     setMessageType(type);
-    setTimeout(() => setMessage(''), 5000); // Longer timeout for restaurant messages
+    
+    // Set a new timeout and store the reference
+    const timeoutId = setTimeout(() => setMessage(''), 5000); // Longer timeout for restaurant messages
+    setMessageTimeoutRef(timeoutId);
   };
 
   //############################################################################

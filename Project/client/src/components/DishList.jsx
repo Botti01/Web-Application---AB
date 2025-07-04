@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ListGroup, Badge, Card } from 'react-bootstrap';
 import API from '../API';
 
-function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }) {
+function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, selectedIngredients = [] }) {
   const [selectedDishType, setSelectedDishType] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
 
@@ -55,6 +55,20 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage }
 
   // Handle size selection
   const handleSizeSelect = (size) => {
+    // Check if we can change to this size based on current ingredients
+    if (selectedDishType && selectedIngredients.length > 0) {
+      const newDishData = getSelectedDishData(selectedDishType, size);
+      if (newDishData && selectedIngredients.length > newDishData.max_ingredients) {
+        const currentSize = selectedSize;
+        const ingredientsToRemove = selectedIngredients.length - newDishData.max_ingredients;
+        showMessage(
+          `Cannot change to ${size} size. Please remove ${ingredientsToRemove} ingredient${ingredientsToRemove > 1 ? 's' : ''} first. ${size} ${selectedDishType} can have maximum ${newDishData.max_ingredients} ingredients.`,
+          'warning'
+        );
+        return; // Don't change the size
+      }
+    }
+    
     setSelectedSize(size);
     // Only update dish selection if dish type is already selected
     if (selectedDishType) {
