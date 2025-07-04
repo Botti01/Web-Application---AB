@@ -1,8 +1,9 @@
 import { Navbar, Nav, Button, Container } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function NavigationBar({ user, onLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <Navbar style={{ background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)' }} variant="dark" expand="lg" fixed="top" className="shadow-lg">
@@ -17,6 +18,31 @@ function NavigationBar({ user, onLogout }) {
           <Nav className="ms-auto">
             {user ? (
               <>
+                {/* Navigation buttons for authenticated users */}
+                {location.pathname === '/orders' ? (
+                  <Button 
+                    variant="outline-light" 
+                    size="sm"
+                    onClick={() => navigate('/')} 
+                    className="me-3"
+                    style={{ borderRadius: '20px' }}
+                  >
+                    <i className="bi bi-arrow-left me-1"></i>
+                    Back to Menu
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline-light" 
+                    size="sm"
+                    onClick={() => navigate('/orders')} 
+                    className="me-3"
+                    style={{ borderRadius: '20px' }}
+                  >
+                    <i className="bi bi-clock-history me-1"></i>
+                    Order History
+                  </Button>
+                )}
+                
                 {/* Display user information */}
                 <Nav.Link disabled className="text-light me-3">
                   <i className="bi bi-person-circle me-1"></i>

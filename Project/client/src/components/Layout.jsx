@@ -65,7 +65,6 @@ function OrderConfigurationLayout({ user, showMessage }) {
   const [ingredients, setIngredients] = useState([]);
   const [selectedDish, setSelectedDish] = useState(null);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
-  const [orders, setOrders] = useState([]);
 
   // Reset selections when user logs out
   useEffect(() => {
@@ -74,25 +73,6 @@ function OrderConfigurationLayout({ user, showMessage }) {
       setSelectedIngredients([]);
     }
   }, [user]);
-
-  // Load orders when user changes
-  useEffect(() => {
-    const loadOrders = async () => {
-      if (user) {
-        try {
-          const ordersData = await API.getOrders();
-          setOrders(ordersData);
-        } catch (error) {
-          console.error('Error loading orders:', error);
-          showMessage('Error loading order history', 'danger');
-        }
-      } else {
-        setOrders([]);
-      }
-    };
-    
-    loadOrders();
-  }, [user, showMessage]);
 
   // Handle order submission
   const handleSubmitOrder = async (orderData) => {
@@ -106,12 +86,6 @@ function OrderConfigurationLayout({ user, showMessage }) {
       // Refresh ingredients to update availability
       const updatedIngredients = await API.getIngredients();
       setIngredients(updatedIngredients);
-      
-      // Refresh orders list
-      if (user) {
-        const updatedOrders = await API.getOrders();
-        setOrders(updatedOrders);
-      }
     } catch (error) {
       // Check if the error contains information about unavailable ingredients
       if (error.error && error.error.includes('unavailable')) {
@@ -165,22 +139,6 @@ function OrderConfigurationLayout({ user, showMessage }) {
     }
   };
 
-  // Handle order cancellation
-  const handleCancelOrder = async (orderId) => {
-    try {
-      await API.cancelOrder(orderId);
-      showMessage('Order cancelled successfully!', 'success');
-      // Refresh orders list and ingredients
-      const updatedOrders = await API.getOrders();
-      setOrders(updatedOrders);
-      const updatedIngredients = await API.getIngredients();
-      setIngredients(updatedIngredients);
-    } catch (error) {
-      const errorMsg = error.error || error.message || 'Error cancelling order';
-      showMessage(errorMsg, 'danger');
-    }
-  };
-
   // Handle ingredient selection toggle - simplified since constraints are handled in IngredientList
   const handleToggleIngredient = (ingredientId) => {
     setSelectedIngredients(prev => {
@@ -227,32 +185,18 @@ function OrderConfigurationLayout({ user, showMessage }) {
           </div>
         </Col>
 
-        {/* Order Configuration and History Section */}
+        {/* Order Configuration Section */}
         <Col xs={12} lg={4}>
           <div className="sticky-top" style={{ top: '90px' }}>
-            {/* Order Configuration */}
-            <div className="mb-4">
-              <OrderConfigurator
-                selectedDish={selectedDish}
-                selectedIngredients={selectedIngredients}
-                setSelectedIngredients={setSelectedIngredients}
-                ingredients={ingredients}
-                onSubmitOrder={handleSubmitOrder}
-                showMessage={showMessage}
-                user={user}
-              />
-            </div>
-            
-            {/* Order History - Always show the component, it handles authentication internally */}
-            <div>
-              <OrderHistory
-                orders={orders}
-                setOrders={setOrders}
-                showMessage={showMessage}
-                user={user}
-                onCancelOrder={handleCancelOrder}
-              />
-            </div>
+            <OrderConfigurator
+              selectedDish={selectedDish}
+              selectedIngredients={selectedIngredients}
+              setSelectedIngredients={setSelectedIngredients}
+              ingredients={ingredients}
+              onSubmitOrder={handleSubmitOrder}
+              showMessage={showMessage}
+              user={user}
+            />
           </div>
         </Col>
       </Row>
@@ -280,21 +224,27 @@ function OrderHistoryLayout({ user, showMessage }) {
   };
 
   return (
-    <Row className="justify-content-center">
-      <Col xs={12} lg={8}>
-        <div className="card shadow-lg border-0" style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '15px' }}>
-          <div className="card-body p-0">
-            <OrderHistory
-              orders={orders}
-              setOrders={setOrders}
-              showMessage={showMessage}
-              user={user}
-              onCancelOrder={handleCancelOrder}
-            />
-          </div>
-        </div>
-      </Col>
-    </Row>
+    <div>
+      {/* Page Title */}
+      <Row className="mb-4">
+        <Col>
+          <h2 className="fw-bold text-dark">
+            <i className="bi bi-clock-history me-2"></i>
+            Order History
+          </h2>
+          <p className="text-muted mb-0">View and manage your past orders</p>
+        </Col>
+      </Row>
+      
+      {/* Order History Content */}
+      <OrderHistory
+        orders={orders}
+        setOrders={setOrders}
+        showMessage={showMessage}
+        user={user}
+        onCancelOrder={handleCancelOrder}
+      />
+    </div>
   );
 }
 

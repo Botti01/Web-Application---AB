@@ -3,7 +3,7 @@ import { Card, Row, Col, Button, Alert, Badge, ListGroup } from 'react-bootstrap
 import { useNavigate } from 'react-router-dom';
 import API from '../API';
 
-function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngredients, ingredients, onSubmitOrder, showMessage, user }) {
+function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngredients, ingredients, onSubmitOrder, showMessage, user, readOnly = false, orderDate = null, title = "Order Configuration", totalPriceOverride = null, onCancelOrder = null, order = null }) {
   const [totalPrice, setTotalPrice] = useState(0);
   const [validationError, setValidationError] = useState('');
   const navigate = useNavigate();
@@ -11,6 +11,11 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
   //-----------------------------------------------------------------------------
   // Calculate total price when dish or ingredients change
   useEffect(() => {
+    if (totalPriceOverride !== null) {
+      setTotalPrice(totalPriceOverride);
+      return;
+    }
+    
     if (!selectedDish) {
       setTotalPrice(0);
       return;
@@ -26,12 +31,12 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
     });
 
     setTotalPrice(price);
-  }, [selectedDish, selectedIngredients, ingredients]);
+  }, [selectedDish, selectedIngredients, ingredients, totalPriceOverride]);
 
   //-----------------------------------------------------------------------------
   // Validate current configuration
   useEffect(() => {
-    if (!selectedDish) {
+    if (!selectedDish || readOnly) {
       setValidationError('');
       return;
     }
@@ -44,7 +49,7 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
 
     // Check dependencies and incompatibilities would be done server-side
     setValidationError('');
-  }, [selectedDish, selectedIngredients]);
+  }, [selectedDish, selectedIngredients, readOnly]);
 
   //-----------------------------------------------------------------------------
   // Handle order submission or redirect to login
@@ -93,7 +98,16 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
     <div className="h-100 d-flex flex-column">
       {/* Header for the configurator section with total price */}
       <div className="p-3 rounded-top text-white shadow-sm d-flex justify-content-between align-items-center" style={{ position: 'relative', zIndex: 10, background: 'linear-gradient(90deg, #7c2d12 0%, #ea580c 100%)', flexShrink: 0 }}>
-        <h5 className="mb-0 fw-bold"><i className="bi bi-cart3 me-2"></i> Order Configuration</h5>
+        <h5 className="mb-0 fw-bold">
+          <i className={`bi ${readOnly ? 'bi-receipt' : 'bi-cart3'} me-2`}></i> 
+          {title}
+          {orderDate && (
+            <small className="d-block mt-1" style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+              <i className="bi bi-calendar me-1"></i>
+              {orderDate}
+            </small>
+          )}
+        </h5>
         {selectedDish && (
           <div className="text-end p-2 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '2px solid #fbbf24' }}>
             <div className="fw-bold text-warning" style={{ fontSize: '2.2rem', textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>€{totalPrice.toFixed(2)}</div>
@@ -173,29 +187,61 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
                 )}
               </div>
 
+              {/* Cancel Order Button - only show in read-only mode for order history */}
+              {readOnly && onCancelOrder && order && (
+                <div className="mb-3 flex-shrink-0">
+                  {user.canDoTotp && user.isTotp ? (
+                    <div className="d-grid">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => onCancelOrder(order)}
+                        className="fw-bold"
+                      >
+                        <i className="bi bi-x-circle me-1"></i>Cancel Order
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="d-grid mb-2">
+                        <Button variant="outline-secondary" size="sm" disabled className="fw-bold">
+                          <i className="bi bi-shield-lock me-1"></i>Cancel Order
+                        </Button>
+                      </div>
+                      <small className="text-muted fst-italic d-block text-center">
+                        <i className="bi bi-shield-lock me-1"></i>
+                        TOTP required to cancel orders
+                      </small>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Validation Error */}
-              {validationError && (
+              {validationError && !readOnly && (
                 <Alert variant="warning" className="small py-2 flex-shrink-0">
                   <i className="bi bi-exclamation-triangle me-2"></i>
                   {validationError}
                 </Alert>
               )}
 
-              {/* Submit Button */}
-              <div className="d-grid flex-shrink-0">
-                <Button
-                  variant={!user ? "outline-primary" : "primary"}
-                  size="lg"
-                  disabled={validationError && user}
-                  onClick={handleSubmitOrder}
-                  className="fw-bold"
-                >
-                  <i className={`bi ${!user ? 'bi-box-arrow-in-right' : 'bi-cart-check'} me-2`}></i>
-                  {!user ? 'Login to Order' : 'Place Order'}
-                </Button>
-              </div>
+              {/* Submit Button - only show if not read-only */}
+              {!readOnly && (
+                <div className="d-grid flex-shrink-0">
+                  <Button
+                    variant={!user ? "outline-primary" : "primary"}
+                    size="lg"
+                    disabled={validationError && user}
+                    onClick={handleSubmitOrder}
+                    className="fw-bold"
+                  >
+                    <i className={`bi ${!user ? 'bi-box-arrow-in-right' : 'bi-cart-check'} me-2`}></i>
+                    {!user ? 'Login to Order' : 'Place Order'}
+                  </Button>
+                </div>
+              )}
 
-              {!user && (
+              {!user && !readOnly && (
                 <small className="text-muted d-block text-center mt-2 flex-shrink-0">
                   <i className="bi bi-info-circle me-1"></i>
                   You need to be logged in to place an order
