@@ -174,7 +174,7 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
                     </p>
                   </div>
                 ) : (
-                  <div className="flex-grow-1 overflow-auto" style={{ maxHeight: '200px' }}>
+                  <div className="flex-grow-1" style={{ maxHeight: '205px' }}>
                     <ListGroup className="small">
                       {getSelectedIngredientsDetails().map(ingredient => (
                         <ListGroup.Item key={ingredient.id} className="d-flex justify-content-between align-items-center py-1 border-0 bg-light">

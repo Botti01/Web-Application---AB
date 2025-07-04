@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ListGroup, Badge, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { ListGroup, Badge } from 'react-bootstrap';
 import API from '../API';
 
 function IngredientList({ ingredients, setIngredients, selectedIngredients, onToggleIngredient, showMessage, disabled = false, readOnly = false }) {
@@ -126,6 +126,13 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     }
 
     const isSelected = selectedIngredients.includes(ingredient.id);
+    const isAvailable = isIngredientAvailable(ingredient);
+
+    // Don't allow selection of unavailable ingredients
+    if (!isSelected && !isAvailable) {
+      showMessage(`${ingredient.name} is currently out of stock`, 'warning');
+      return;
+    }
 
     if (isSelected) {
       // Trying to remove ingredient - check if it would break dependencies
@@ -157,19 +164,27 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   };
 
   //-----------------------------------------------------------------------------
-  // Create tooltip content for ingredient constraints
-  const getTooltipContent = (ingredient) => {
+  // Create constraints display for ingredient
+  const getConstraintsDisplay = (ingredient) => {
     const constraints = [];
     
     if (ingredient.dependencies && ingredient.dependencies.length > 0) {
-      constraints.push(`Requires: ${ingredient.dependencies.join(', ')}`);
+      constraints.push({
+        type: 'dependency',
+        text: `Requires: ${ingredient.dependencies.join(', ')}`,
+        icon: 'bi-arrow-down-circle'
+      });
     }
     
     if (ingredient.incompatibilities && ingredient.incompatibilities.length > 0) {
-      constraints.push(`Incompatible with: ${ingredient.incompatibilities.join(', ')}`);
+      constraints.push({
+        type: 'incompatibility', 
+        text: `Incompatible: ${ingredient.incompatibilities.join(', ')}`,
+        icon: 'bi-x-circle'
+      });
     }
     
-    return constraints.join('\n');
+    return constraints;
   };
 
   //-----------------------------------------------------------------------------
@@ -201,30 +216,36 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
           const isSelected = selectedIngredients.includes(ingredient.id);
           const isAvailable = isIngredientAvailable(ingredient);
           const buttonDisabled = isButtonDisabled(ingredient);
+          const constraints = getConstraintsDisplay(ingredient);
           
           return (
             <ListGroup.Item
               key={ingredient.id}
-              className="border-0 py-2 px-3"
+              className="border-0 px-3"
               style={{ 
+                paddingTop: '14px',
+                paddingBottom: '14px',
+                cursor: buttonDisabled ? 'default' : 'pointer',
                 background: isSelected 
                   ? 'linear-gradient(90deg, #059669 0%, #10b981 100%)'
                   : isAvailable ? '#ffffff' : '#f3f4f6',
                 color: isSelected ? 'white' : isAvailable ? 'inherit' : '#6b7280',
                 opacity: disabled ? 0.6 : 1
               }}
+              onClick={() => handleIngredientClick(ingredient)}
             >
               <div className="d-flex justify-content-between align-items-center">
-                <div className="flex-grow-1">
+                <div className="flex-grow-1 me-3">
                   <div className="fw-bold fs-6 mb-1">
                     {ingredient.name}
-                    {(ingredient.dependencies?.length > 0 || ingredient.incompatibilities?.length > 0) && (
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={<Tooltip>{getTooltipContent(ingredient)}</Tooltip>}
+                    {isSelected && (
+                      <Badge 
+                        bg="warning" 
+                        className="text-dark ms-2"
+                        style={{ fontSize: '0.7rem' }}
                       >
-                        <i className={`bi bi-info-circle ms-2 ${isSelected ? 'text-light' : 'text-muted'}`}></i>
-                      </OverlayTrigger>
+                        Selected
+                      </Badge>
                     )}
                   </div>
                   <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
@@ -238,20 +259,28 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
                   </div>
                 </div>
                 
-                <div className="text-end">
-                  <Button
-                    variant={isSelected ? "warning" : "outline-success"}
-                    size="sm"
-                    disabled={buttonDisabled}
-                    onClick={() => handleIngredientClick(ingredient)}
-                    className={isSelected ? 'text-dark' : ''}
-                  >
-                    {isSelected ? (
-                      <><i className="bi bi-dash-circle me-1"></i>Remove</>
-                    ) : (
-                      <><i className="bi bi-plus-circle me-1"></i>Add</>
-                    )}
-                  </Button>
+                {/* Constraints display */}
+                <div className="text-end" style={{ minWidth: '120px' }}>
+                  {constraints.length > 0 && (
+                    <div className="d-flex flex-column gap-1">
+                      {constraints.map((constraint, index) => (
+                        <div 
+                          key={index}
+                          className="small"
+                          style={{ 
+                            fontSize: '0.8rem', 
+                            lineHeight: '1.3',
+                            color: isSelected ? 'white' : (
+                              constraint.type === 'dependency' ? '#059669' : '#dc2626'
+                            )
+                          }}
+                        >
+                          <i className={`${constraint.icon} me-1`}></i>
+                          <span>{constraint.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </ListGroup.Item>

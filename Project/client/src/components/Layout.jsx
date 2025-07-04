@@ -184,7 +184,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
               selectedIngredients={user ? selectedIngredients : []}
               onToggleIngredient={user ? handleToggleIngredient : null}
               showMessage={showMessage}
-              disabled={!user || !selectedDish}
+              disabled={user && !selectedDish}
               readOnly={!user}
             />
           </div>
