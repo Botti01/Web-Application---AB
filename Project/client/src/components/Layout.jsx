@@ -45,14 +45,16 @@ function NotFoundLayout() {
 // --- Login Layout ---
 function LoginLayout({ onLogin, totpRequired, onTotp, onSkipTotp }) {
   return (
-    <Container>
-      <Row className="justify-content-center" style={{ minHeight: '100vh', paddingTop: '100px' }}>
+    <Container fluid className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+      <Row className="w-100 justify-content-center">
+        <Col xs={12} sm={10} md={8} lg={6} xl={5}>
           <LoginForm 
             onLogin={onLogin} 
             totpRequired={totpRequired} 
             onTotp={onTotp}
             onSkipTotp={onSkipTotp}
           />
+        </Col>
       </Row>
     </Container>
   );
@@ -250,12 +252,12 @@ function OrderHistoryLayout({ user, showMessage }) {
 
 //------------------------------------------------------------------------
 // --- Main Restaurant Layout ---
-function RestaurantLayout({ user, message, messageType = 'danger', onLogout, showMessage }) {
+function RestaurantLayout({ user, message, messageType = 'danger', onLogout, showMessage, onComplete2FA }) {
   const location = useLocation();
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
-      <NavigationBar user={user} onLogout={onLogout} />
+      <NavigationBar user={user} onLogout={onLogout} onComplete2FA={onComplete2FA} />
       
       <div style={{ paddingTop: '80px' }}>
         <Container fluid className="px-4 py-4">
@@ -299,14 +301,32 @@ function RestaurantLayout({ user, message, messageType = 'danger', onLogout, sho
 
 //------------------------------------------------------------------------
 // --- TOTP Layout ---
-function TotpLayout({ totpSuccessful }) {
+function TotpLayout({ onTotp, onSkipTotp, message, messageType }) {
   return (
     <Container fluid className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
       <Row className="w-100 justify-content-center">
         <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+          {/* Message Alert */}
+          {message && (
+            <Alert 
+              className="mb-4 border-0 shadow-sm" 
+              variant={messageType} 
+              style={{ borderRadius: '10px' }}
+            >
+              <i className={`bi ${
+                messageType === 'success' ? 'bi-check-circle-fill' : 
+                messageType === 'warning' ? 'bi-exclamation-triangle-fill' : 
+                messageType === 'info' ? 'bi-info-circle-fill' :
+                'bi-exclamation-triangle-fill'
+              } me-2`}></i>
+              {message}
+            </Alert>
+          )}
+          
           <LoginForm 
             totpRequired={true}
-            onTotp={totpSuccessful}
+            onTotp={onTotp}
+            onSkipTotp={onSkipTotp}
           />
         </Col>
       </Row>

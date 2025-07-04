@@ -361,10 +361,7 @@ app.delete('/api/orders/:id', isLoggedIn, isTotp, [
 
   try {
     const result = await orderDao.deleteOrder(req.params.id, req.user.id);
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
+    
     // Restore ingredient availability
     for (const ingredientId of result.ingredients) {
       const ingredient = await ingredientDao.getIngredientById(ingredientId);

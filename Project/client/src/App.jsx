@@ -12,7 +12,7 @@ import API from './API';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import { RestaurantLayout, LoginLayout, NotFoundLayout, OrderHistoryLayout} from './components/Layout';
+import { RestaurantLayout, LoginLayout, NotFoundLayout, OrderHistoryLayout, TotpLayout} from './components/Layout';
 
 //----------------------------------------------------------------------------
 function App() {
@@ -122,6 +122,18 @@ function App() {
   }
 
   //----------------------------------------------------------------------------
+  // Handle completing 2FA for already logged in users
+  function handleComplete2FA() {
+    if (user && user.canDoTotp && !user.isTotp) {
+      setTotpRequired(true);
+      setPendingUser(user);
+      setMessage('Please complete 2FA authentication for full access');
+      setMessageType('info');
+      navigate('/totp');
+    }
+  }
+
+  //----------------------------------------------------------------------------
   // Global message handler
   const showMessage = (msg, type = 'danger') => {
     setMessage(msg);
@@ -160,7 +172,8 @@ function App() {
               message={message} 
               messageType={messageType} 
               onLogout={handleLogout} 
-              showMessage={showMessage} 
+              showMessage={showMessage}
+              onComplete2FA={handleComplete2FA}
             />
           } 
         />
@@ -174,8 +187,26 @@ function App() {
               message={message} 
               messageType={messageType} 
               onLogout={handleLogout} 
-              showMessage={showMessage} 
+              showMessage={showMessage}
+              onComplete2FA={handleComplete2FA}
             />
+          } 
+        />
+        
+        {/* TOTP Route - For completing 2FA */}
+        <Route 
+          path="/totp" 
+          element={
+            totpRequired ? (
+              <TotpLayout 
+                onTotp={handleTotp}
+                onSkipTotp={handleSkipTotp}
+                message={message}
+                messageType={messageType}
+              />
+            ) : (
+              <Navigate replace to="/" />
+            )
           } 
         />
         
