@@ -137,7 +137,7 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
                 >
                   <div>
                     <div className="fw-bold fs-6 mb-1">
-                      <i className={`bi ${type === 'pizza' ? 'bi-circle' : type === 'pasta' ? 'bi-egg-fried' : 'bi-bowl'} me-2`}></i>
+                      <i className={`bi ${type === 'pizza' ? 'bi-pie-chart' : type === 'pasta' ? 'bi-egg-fried' : 'bi-leaf'} me-2`}></i>
                       <span className="text-capitalize">{type}</span>
                     </div>
                     <div className={`small ${isSelected ? 'text-light' : 'text-muted'}`}>
