@@ -183,7 +183,7 @@ function LoginForm({ onLogin, totpRequired, onTotp, onSkipTotp }) {
                 )}
               </Button>
               
-              {/* Skip TOTP button */}
+              {/* Skip TOTP button - only for TOTP verification */}
               {totpRequired && onSkipTotp && (
                 <Button
                   variant="outline-warning"
@@ -198,6 +198,24 @@ function LoginForm({ onLogin, totpRequired, onTotp, onSkipTotp }) {
                 >
                   <i className="bi bi-skip-forward me-2"></i>
                   Skip 2FA (Limited Access)
+                </Button>
+              )}
+
+              {/* Back to Menu button - only for regular login, not for TOTP */}
+              {!totpRequired && (
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => navigate('/')}
+                  disabled={isLoading}
+                  className="w-100 fw-bold border-2"
+                  size="lg"
+                  style={{ 
+                    borderRadius: '10px',
+                    padding: '12px'
+                  }}
+                >
+                  <i className="bi bi-arrow-left me-2"></i>
+                  Back to Menu
                 </Button>
               )}
             </Form>
