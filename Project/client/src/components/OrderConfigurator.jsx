@@ -71,11 +71,11 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
       };
 
       // Only call the callback, don't create the order here
+      // Let the Layout handle the order creation and messaging
       await onSubmitOrder(orderData);
       
       // Reset selection after successful order (only on success)
       setSelectedIngredients([]);
-      showMessage('Order placed successfully!', 'success');
     } catch (error) {
       // Don't reset ingredients here - let the Layout handle selective removal
       // Don't show success message on error
