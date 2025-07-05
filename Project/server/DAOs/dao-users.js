@@ -52,28 +52,3 @@ exports.getUserById = (id) => {
   });
 };
 
-//--------------------------------------------------------------------------
-// Create a new user (registration)
-exports.createUser = (email, name, password, hasTotp = false) => {
-  return new Promise((resolve, reject) => {
-    // Generate salt and hash password
-    const salt = crypto.randomBytes(16).toString('hex');
-    crypto.scrypt(password, salt, 32, (err, hashedPassword) => {
-      if (err) reject(err);
-      else {
-        const hash = hashedPassword.toString('hex');
-        const otpSecret = hasTotp ? 'LXBSMDTMSP2I5XFXIYRGFVWSFI' : null;
-        
-        const sql = `
-          INSERT INTO users (email, name, hash, salt, otp_secret)
-          VALUES (?, ?, ?, ?, ?)
-        `;
-        db.run(sql, [email, name, hash, salt, otpSecret], function(err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        });
-      }
-    });
-  });
-};
-

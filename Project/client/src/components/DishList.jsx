@@ -63,7 +63,6 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
     if (selectedDishType && selectedIngredients.length > 0) {
       const newDishData = getSelectedDishData(selectedDishType, size);
       if (newDishData && selectedIngredients.length > newDishData.max_ingredients) {
-        const currentSize = selectedSize;
         const ingredientsToRemove = selectedIngredients.length - newDishData.max_ingredients;
         showMessage(
           `Cannot change to ${size} size. Please remove ${ingredientsToRemove} ingredient${ingredientsToRemove > 1 ? 's' : ''} first. ${size} ${selectedDishType} can have maximum ${newDishData.max_ingredients} ingredients.`,

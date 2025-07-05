@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
+import { Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import API from '../API';
 
 function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngredients, ingredients, onSubmitOrder, showMessage, user, readOnly = false, orderDate = null, title = "Order Configuration", totalPriceOverride = null, onCancelOrder = null, order = null }) {
   const [totalPrice, setTotalPrice] = useState(0);

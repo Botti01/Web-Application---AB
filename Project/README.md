@@ -73,7 +73,7 @@
 ![Order History](./img/OrderHistory.png)
 
 #### User Without 2FA Access
-![User Without 2FA](./img/UserWo_2FA.png)
+![User Without 2FA](./img/History_wo_2FA.png)
 
 ### User Credentials
 

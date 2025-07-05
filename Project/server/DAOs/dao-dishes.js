@@ -15,23 +15,6 @@ exports.getAllDishes = () => {
 //--------------------------------------------------------------------------
 // Get specific dish by name and size
 exports.getDishByNameAndSize = (dishName, size) => {
-};
-
-//--------------------------------------------------------------------------
-// Get dishes by name (pizza, pasta, salad)
-exports.getDishesByName = (dishName) => {
-  return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM dishes WHERE name = ? ORDER BY price';
-    db.all(sql, [dishName], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-//--------------------------------------------------------------------------
-// Get specific dish by name and size
-exports.getDishByNameAndSize = (dishName, size) => {
   return new Promise((resolve, reject) => {
     const sql = 'SELECT * FROM dishes WHERE name = ? AND size = ?';
     db.get(sql, [dishName, size], (err, row) => {

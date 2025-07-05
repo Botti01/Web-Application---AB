@@ -21,7 +21,7 @@ CREATE TABLE users (
 CREATE TABLE dishes (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     name    TEXT NOT NULL,
-    size    TEXT NOT NULL CHECK (size IN ('Small', 'Medium', 'Large')),
+    size    TEXT NOT NULL,
     price   REAL NOT NULL,
     max_ingredients INTEGER NOT NULL
 );
@@ -61,7 +61,7 @@ CREATE TABLE orders (
     id          INTEGER     PRIMARY KEY AUTOINCREMENT,
     user_id     INTEGER     NOT NULL,
     dish_name   TEXT        NOT NULL,
-    dish_size   TEXT        NOT NULL CHECK (dish_size IN ('Small', 'Medium', 'Large')),
+    dish_size   TEXT        NOT NULL,
     total_price REAL        NOT NULL,
     order_date  DATETIME    DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -148,7 +148,7 @@ INSERT INTO users (email, name, hash, salt, otp_secret) VALUES
 -- User 1: 2 Small dishes
 -- Order 1: Small pizza with olives, tomatoes, mozzarella (respecting dependency chain)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pizza', 'Small', 7.20, '2024-12-01 12:30:00');
+(1, 'pizza', 'Small', 7.20, '2025-06-27 12:30:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (1, (SELECT id FROM ingredients WHERE name = 'olives')),
@@ -157,7 +157,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 
 -- Order 2: Small pasta with ham, carrots (ham has limited availability)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(1, 'pasta', 'Small', 6.60, '2024-12-02 19:15:00');
+(1, 'pasta', 'Small', 6.60, '2025-06-29 19:15:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (2, (SELECT id FROM ingredients WHERE name = 'ham')),
@@ -166,7 +166,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 -- User 2: 1 Medium + 1 Large dish
 -- Order 3: Medium salad with olives, tuna, eggs, carrots, potatoes (tuna requires olives, max 5 ingredients)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'salad', 'Medium', 10.60, '2024-12-03 13:45:00');
+(2, 'salad', 'Medium', 10.60, '2025-07-03 13:45:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (3, (SELECT id FROM ingredients WHERE name = 'olives')),
@@ -181,7 +181,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 -- And olives are incompatible with anchovies, so we can't have both
 -- Let's use: olives, tomatoes, mozzarella, parmesan, mushrooms, carrots, potatoes (7 ingredients for Large)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
-(2, 'pizza', 'Large', 14.30, '2024-12-03 20:00:00');
+(2, 'pizza', 'Large', 14.30, '2025-07-04 20:00:00');
 
 INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (4, (SELECT id FROM ingredients WHERE name = 'olives')),
