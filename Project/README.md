@@ -78,10 +78,10 @@
 ### User Credentials
 
 #### Regular Users
-- **Email**: `a@test.com` | **Password**: `pwd` | **2FA**: Enabled
-- **Email**: `r@test.com` | **Password**: `pwd` | **2FA**: Enabled
-- **Email**: `e@test.com` | **Password**: `pwd` | **2FA**: Enabled
-- **Email**: `s@test.com` | **Password**: `pwd` | **2FA**: Enabled
+- **Email**: `a@test.com` | **Password**: `pwd`
+- **Email**: `r@test.com` | **Password**: `pwd`
+- **Email**: `e@test.com` | **Password**: `pwd`
+- **Email**: `s@test.com` | **Password**: `pwd`
 
-**Note**: All users have TOTP enabled. Users can login without 2FA but will have limited access. Order cancellation requires TOTP verification using secret: `LXBSMDTMSP2I5XFXIYRGFVWSFI`
+**Note**: All users have TOTP enabled. Users can login without 2FA but will have limited access. Order cancellation requires TOTP verification using secret: LXBSMDTMSP2I5XFXIYRGFVWSFI`
 
