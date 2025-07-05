@@ -12,7 +12,7 @@
 
 - POST `/api/sessions`: User login with username/password
   - request body: `{username, password}`
-  - response: user info with `canDoTotp` and `isTotp` flags
+  - response: user info with `isTotp` flag
 - POST `/api/login-totp`: TOTP verification for 2FA
   - request body: `{token}` 
   - response: `{otp: 'authorized'}`

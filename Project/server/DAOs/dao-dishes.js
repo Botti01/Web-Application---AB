@@ -13,6 +13,11 @@ exports.getAllDishes = () => {
 };
 
 //--------------------------------------------------------------------------
+// Get specific dish by name and size
+exports.getDishByNameAndSize = (dishName, size) => {
+};
+
+//--------------------------------------------------------------------------
 // Get dishes by name (pizza, pasta, salad)
 exports.getDishesByName = (dishName) => {
   return new Promise((resolve, reject) => {

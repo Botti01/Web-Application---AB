@@ -41,14 +41,6 @@ const getDishes = async () => {
   );
 };
 
-//----------------------------------------------------------------------------
-// Fetch dishes by name (public)
-const getDishesByName = async (dishName) => {
-  return getJson(
-    fetch(SERVER_URL + `dishes/${dishName}`, { credentials: 'include' })
-  );
-};
-
 //############################################################################
 // INGREDIENTS
 //############################################################################
@@ -85,17 +77,6 @@ const getOrders = async () => {
     ...order,
     order_date: order.order_date ? dayjs(order.order_date) : null,
   })));
-};
-
-//----------------------------------------------------------------------------
-// Fetch a specific order by ID (authenticated users only)
-const getOrder = async (orderId) => {
-  return getJson(
-    fetch(SERVER_URL + `orders/${orderId}`, { credentials: 'include' })
-  ).then(order => ({
-    ...order,
-    order_date: order.order_date ? dayjs(order.order_date) : null,
-  }));
 };
 
 //----------------------------------------------------------------------------
@@ -164,7 +145,6 @@ const getUserInfo = async () => {
 const API = {
   // Dishes
   getDishes,
-  getDishesByName,
   
   // Ingredients
   getIngredients,
@@ -172,7 +152,6 @@ const API = {
   // Orders
   createOrder,
   getOrders,
-  getOrder,
   cancelOrder,
   
   // Authentication

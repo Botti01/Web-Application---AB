@@ -63,7 +63,7 @@ passport.use(new LocalStrategy(
 // The TOTP strategy is used for two-factor authentication (2FA)
 passport.use(new TotpStrategy(
   function(user, done) {
-    // Only enable TOTP if user has otp_secret
+    // All users should have TOTP enabled, but check for robustness
     if (!user.secret) return done(null, null);
     return done(null, base32.decode(user.secret), 30);
   }
@@ -103,7 +103,6 @@ function clientUserInfo(req) {
     id: user.id,
     name: user.name,
     username: user.username,
-    canDoTotp: !!user.secret,
     isTotp: req.session.method === 'totp'
   };
 }
@@ -133,8 +132,6 @@ app.post('/api/sessions', function(req, res, next) {
 //----------------------------------------------------------------------------
 // TOTP verification (2FA)
 app.post('/api/login-totp', isLoggedIn, function(req, res, next) {
-  if (!req.user.secret) return res.status(400).json({ error: 'TOTP not enabled for this user' });
-
   passport.authenticate('totp', function(err, user, info) {
     if (err) return next(err);
     if (!user) return res.status(401).json({ error: 'Invalid TOTP code' });
@@ -173,18 +170,6 @@ app.get('/api/dishes', async (req, res) => {
     res.json(dishes);
   } catch (err) {
     console.error('Error getting dishes:', err);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
-//----------------------------------------------------------------------------
-// Get dishes by name (public)
-app.get('/api/dishes/:name', async (req, res) => {
-  try {
-    const dishes = await dishDao.getDishesByName(req.params.name);
-    res.json(dishes);
-  } catch (err) {
-    console.error('Error getting dishes by name:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
@@ -324,28 +309,6 @@ app.get('/api/orders', isLoggedIn, async (req, res) => {
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
-  }
-});
-
-//----------------------------------------------------------------------------
-// Get specific order (authenticated users only)
-app.get('/api/orders/:id', isLoggedIn, [
-  check('id').isInt({ min: 1 }).withMessage('Invalid order ID')
-], async (req, res) => {
-  const errors = validationResult(req).formatWith(errorFormatter);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.errors });
-  }
-
-  try {
-    const order = await orderDao.getOrderById(req.params.id, req.user.id);
-    if (order.error) {
-      return res.status(404).json(order);
-    }
-    res.json(order);
-  } catch (err) {
-    console.error('Error getting order:', err);
-    res.status(500).json({ error: 'Database error' });
   }
 });
 

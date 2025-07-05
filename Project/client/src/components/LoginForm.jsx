@@ -200,22 +200,6 @@ function LoginForm({ onLogin, totpRequired, onTotp, onSkipTotp }) {
                   Skip 2FA (Limited Access)
                 </Button>
               )}
-              
-              {/* Back to menu button */}
-              <Button
-                variant="outline-secondary"
-                onClick={() => navigate('/')}
-                disabled={isLoading}
-                className="w-100 fw-bold border-2"
-                size="lg"
-                style={{ 
-                  borderRadius: '10px',
-                  padding: '12px'
-                }}
-              >
-                <i className="bi bi-arrow-left me-2"></i>
-                Back to Menu
-              </Button>
             </Form>
           </div>
         </div>

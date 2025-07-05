@@ -55,13 +55,13 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
                 <span className="text-light me-3">
                   <i className="bi bi-person-circle me-1"></i>
                   Welcome, <span className="fw-bold">{user.name}</span>
-                  {user.canDoTotp && user.isTotp && (
+                  {user.isTotp && (
                     <span className="badge bg-success text-white ms-2">
                       <i className="bi bi-shield-check me-1"></i>
                       2FA
                     </span>
                   )}
-                  {user.canDoTotp && !user.isTotp && (
+                  {!user.isTotp && (
                     <span className="badge bg-warning text-dark ms-2">
                       <i className="bi bi-shield-exclamation me-1"></i>
                       Limited
@@ -69,8 +69,8 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
                   )}
                 </span>
                 
-                {/* TOTP button for users who can do TOTP but haven't authenticated */}
-                {user.canDoTotp && !user.isTotp && (
+                {/* TOTP button for users who haven't authenticated with 2FA */}
+                {!user.isTotp && (
                   <Button 
                     variant="outline-warning" 
                     size="sm"

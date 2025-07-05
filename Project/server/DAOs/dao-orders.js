@@ -101,29 +101,3 @@ exports.deleteOrder = (orderId, userId) => {
     });
   });
 };
-
-//--------------------------------------------------------------------------
-// Remove a specific ingredient from an order
-exports.removeOrderIngredient = (orderId, ingredientId, userId) => {
-  return new Promise((resolve, reject) => {
-    // First verify the order belongs to the user
-    const checkSql = 'SELECT id FROM orders WHERE id = ? AND user_id = ?';
-    db.get(checkSql, [orderId, userId], (err, order) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      if (!order) {
-        resolve({ error: 'Order not found or unauthorized' });
-        return;
-      }
-      
-      // Remove the ingredient from the order
-      const deleteSql = 'DELETE FROM order_ingredients WHERE order_id = ? AND ingredient_id = ?';
-      db.run(deleteSql, [orderId, ingredientId], function(err) {
-        if (err) reject(err);
-        else resolve({ changes: this.changes });
-      });
-    });
-  });
-};

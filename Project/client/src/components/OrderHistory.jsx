@@ -50,22 +50,6 @@ function OrderHistory({ orders, setOrders, showMessage, user, onCancelOrder }) {
     loadData();
   }, []);
 
-  //-----------------------------------------------------------------------------
-  // Handle order cancellation
-  const handleCancelOrder = async (orderId) => {
-    try {
-      await API.cancelOrder(orderId);
-      showMessage('Order cancelled successfully!', 'success');
-      // Refresh orders after cancellation
-      const ordersData = await API.getOrders();
-      setOrders(ordersData);
-      if (onCancelOrder) onCancelOrder(orderId);
-    } catch (error) {
-      const errorMsg = error.error || error.message || 'Error cancelling order';
-      showMessage(errorMsg, 'danger');
-    }
-  };
-
   // Sort orders by date in descending order
   const sortedOrders = [...orders].sort((a, b) => 
     dayjs(b.order_date).unix() - dayjs(a.order_date).unix()

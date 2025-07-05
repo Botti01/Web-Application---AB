@@ -53,18 +53,6 @@ exports.getUserById = (id) => {
 };
 
 //--------------------------------------------------------------------------
-// Get all users (admin function)
-exports.getAllUsers = () => {
-  return new Promise((resolve, reject) => {
-    const sql = 'SELECT id, email, name FROM users ORDER BY name';
-    db.all(sql, [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-//--------------------------------------------------------------------------
 // Create a new user (registration)
 exports.createUser = (email, name, password, hasTotp = false) => {
   return new Promise((resolve, reject) => {
@@ -85,19 +73,6 @@ exports.createUser = (email, name, password, hasTotp = false) => {
           else resolve(this.lastID);
         });
       }
-    });
-  });
-};
-
-//--------------------------------------------------------------------------
-// Update user TOTP status
-exports.updateUserTotp = (userId, hasTotp) => {
-  return new Promise((resolve, reject) => {
-    const otpSecret = hasTotp ? 'LXBSMDTMSP2I5XFXIYRGFVWSFI' : null;
-    const sql = 'UPDATE users SET otp_secret = ? WHERE id = ?';
-    db.run(sql, [otpSecret, userId], function(err) {
-      if (err) reject(err);
-      else resolve(this.changes);
     });
   });
 };

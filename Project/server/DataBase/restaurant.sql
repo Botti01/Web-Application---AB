@@ -14,7 +14,7 @@ CREATE TABLE users (
     name    TEXT    NOT NULL,
     hash    TEXT    NOT NULL,  -- hashed password
     salt    TEXT    NOT NULL,  -- salt for password
-    otp_secret TEXT  -- TOTP secret, NULL for users without TOTP
+    otp_secret TEXT  -- TOTP secret for 2FA (all users have TOTP enabled)
 );
 
 -- Base dishes table (pizza, pasta, salad)

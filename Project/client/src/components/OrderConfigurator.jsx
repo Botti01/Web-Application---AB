@@ -190,7 +190,7 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               {/* Cancel Order Button - only show in read-only mode for order history */}
               {readOnly && onCancelOrder && order && (
                 <div className="mb-3 flex-shrink-0">
-                  {user.canDoTotp && user.isTotp ? (
+                  {user.isTotp ? (
                     <div className="d-grid">
                       <Button
                         variant="outline-danger"

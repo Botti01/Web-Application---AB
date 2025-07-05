@@ -50,21 +50,12 @@ function App() {
     try {
       const res = await API.logIn(credentials);
       
-      // If user can do TOTP, set up for TOTP verification
-      if (res.canDoTotp) {
-        setTotpRequired(true);
-        setPendingUser(res);
-        setUser(null);
-        setMessage('Please complete 2FA authentication for full access');
-        setMessageType('info');
-      } else {
-        // User doesn't have TOTP, login directly
-        setUser(res);
-        setTotpRequired(false);
-        setPendingUser(null);
-        navigate('/');
-        showMessage('Welcome! You are now logged in.', 'success');
-      }
+      // All users can do TOTP, set up for TOTP verification
+      setTotpRequired(true);
+      setPendingUser(res);
+      setUser(null);
+      setMessage('Please complete 2FA authentication for full access');
+      setMessageType('info');
     } catch (err) {
       setUser(null);
       setTotpRequired(false);
@@ -126,7 +117,7 @@ function App() {
   //----------------------------------------------------------------------------
   // Handle completing 2FA for already logged in users
   function handleComplete2FA() {
-    if (user && user.canDoTotp && !user.isTotp) {
+    if (user && !user.isTotp) {
       setTotpRequired(true);
       setPendingUser(user);
       setMessage('Please complete 2FA authentication for full access');
