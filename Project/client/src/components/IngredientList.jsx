@@ -40,13 +40,13 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   }, [ingredients]); // Not selectedIngredients to avoid infinite loops
 
   //-----------------------------------------------------------------------------
-  // Helper function to check if ingredient is available
+  // Function to check if ingredient is available
   const isIngredientAvailable = (ingredient) => {
     return ingredient.current_availability === null || ingredient.current_availability > 0;
   };
 
   //-----------------------------------------------------------------------------
-  // Helper function to check constraints when trying to add an ingredient
+  // Function to check constraints when trying to add an ingredient
   const checkConstraintsForAdding = (ingredient) => {
     // Check if all dependencies are already selected
     const missingDependencies = ingredient.dependencies?.filter(depName => {
@@ -91,7 +91,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   };
 
   //-----------------------------------------------------------------------------
-  // Helper function to check if removing an ingredient would break dependencies
+  // Function to check if removing an ingredient would break dependencies
   const checkConstraintsForRemoving = (ingredient) => {
     const wouldBreakDependencies = selectedIngredients.some(otherIngredientId => {
       if (otherIngredientId === ingredient.id) return false;
@@ -156,7 +156,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   };
 
   //-----------------------------------------------------------------------------
-  // Helper function to determine if button should be disabled (only for unavailable ingredients)
+  // Function to determine if button should be disabled (only for unavailable ingredients)
   const isButtonDisabled = (ingredient) => {
     if (disabled || readOnly) return true;
     if (!isIngredientAvailable(ingredient)) return true;

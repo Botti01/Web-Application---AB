@@ -97,7 +97,7 @@ function isTotp(req, res, next) {
 }
 
 //----------------------------------------------------------------------------
-// Helper to send user info to client
+// Send user info to client
 function clientUserInfo(req) {
   const user = req.user;
   return {
@@ -109,7 +109,7 @@ function clientUserInfo(req) {
 }
 
 //----------------------------------------------------------------------------
-// Utility functions
+// Error formatter for validation errors
 const errorFormatter = ({ location, msg, param, value }) => {
   let error = `${location}[${param}]: ${msg}`;
   if (value !== undefined && value !== null && value !== '') {
@@ -195,7 +195,7 @@ app.get('/api/ingredients', async (_req, res) => {
 });
 
 //----------------------------------------------------------------------------
-// Validate ingredient constraints helper function
+// Validate ingredient constraints function
 async function validateIngredientConstraints(ingredientIds) {
   if (ingredientIds.length === 0) return { valid: true };
 

@@ -3,9 +3,7 @@ import dayjs from 'dayjs';
 const SERVER_URL = 'http://localhost:3001/api/';
 
 //----------------------------------------------------------------------------
-/**
- * Utility function for parsing the HTTP response.
- */
+// Function for parsing the HTTP response.
 function getJson(httpResponsePromise) {
   // server API always return JSON, in case of error the format is the following { error: <message> } 
   return new Promise((resolve, reject) => {
