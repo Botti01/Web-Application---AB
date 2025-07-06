@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 
-function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngredients, ingredients, onSubmitOrder, showMessage, user, readOnly = false, orderDate = null, title = "Order Configuration", totalPriceOverride = null, onCancelOrder = null, order = null }) {
+function OrderConfigurator({ 
+  selectedDish, selectedIngredients, setSelectedIngredients, ingredients, 
+  onSubmitOrder, showMessage, user, 
+  readOnly = false,           // Switches between creation/display mode
+  orderDate = null,           // For order history display
+  title = "Order Configuration", 
+  totalPriceOverride = null,  // For historical orders
+  onCancelOrder = null, order = null 
+}) {
   const [totalPrice, setTotalPrice] = useState(0);
   const [validationError, setValidationError] = useState('');
-  const navigate = useNavigate();
 
   //-----------------------------------------------------------------------------
   // Calculate total price when dish or ingredients change
@@ -51,14 +57,8 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
   }, [selectedDish, selectedIngredients, readOnly]);
 
   //-----------------------------------------------------------------------------
-  // Handle order submission or redirect to login
+  // Handle order submission
   const handleSubmitOrder = async () => {
-    if (!user) {
-      // Redirect to login page if user is not authenticated
-      navigate('/login');
-      return;
-    }
-
     if (!selectedDish) return;
 
     try {
@@ -69,15 +69,13 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
         total_price: totalPrice
       };
 
-      // Only call the callback, don't create the order here
-      // Let the Layout handle the order creation and messaging
+      // The Layout handle the order creation and messaging
       await onSubmitOrder(orderData);
       
       // Reset selection after successful order (only on success)
       setSelectedIngredients([]);
     } catch (error) {
-      // Don't reset ingredients here - let the Layout handle selective removal
-      // Don't show success message on error
+      // The Layout handle selective removal
       const errorMsg = error.error || error.message || 'Error placing order';
       showMessage(errorMsg, 'danger');
     }
@@ -124,8 +122,8 @@ function OrderConfigurator({ selectedDish, selectedIngredients, setSelectedIngre
               </div>
               <h5 className="text-muted mb-3">Start Your Order</h5>
               <p className="text-muted mb-4">
-                Select a dish from the menu to start configuring your order.<br/>
-                Once you choose a dish, you'll be able to add ingredients and see the total price.
+                Select a dish and size from the menu to start configuring your order.<br/>
+                Once you choose a dish and size, you'll be able to add ingredients and see the total price.
               </p>
               <div className="bg-light p-3 rounded">
                 <small className="text-muted">

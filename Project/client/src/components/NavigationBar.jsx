@@ -10,7 +10,7 @@ function NavigationBar({ user, onLogout, onComplete2FA }) {
       <Container fluid className="px-3">
         {/* Left side: App title and Order History button */}
         <div className="d-flex align-items-center">
-          <Navbar.Brand href="/" className="fw-bold fs-4 me-2">
+          <Navbar.Brand onClick={() => navigate('/')} className="fw-bold fs-4 me-2" style={{ cursor: 'pointer' }}>
             <i className="bi bi-shop me-2"></i>
             My Restaurant
           </Navbar.Brand>

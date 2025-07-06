@@ -19,7 +19,7 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
     refreshIngredients();
   }, [setIngredients, showMessage]);
 
-  // Enhanced effect to handle when ingredients are updated externally
+  // Handle when ingredients are updated externally
   useEffect(() => {
     // Check if any selected ingredients are no longer available
     const unavailableSelected = selectedIngredients.filter(selectedId => {
@@ -32,12 +32,12 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
       unavailableSelected.forEach(ingredientId => {
         const ingredient = ingredients.find(ing => ing.id === ingredientId);
         if (ingredient) {
-          // Use onToggleIngredient to remove the ingredient (this will trigger the removal logic)
+          // Use onToggleIngredient to remove the ingredient
           setTimeout(() => onToggleIngredient(ingredientId), 0);
         }
       });
     }
-  }, [ingredients]); // Only depend on ingredients, not selectedIngredients to avoid infinite loops
+  }, [ingredients]); // Not selectedIngredients to avoid infinite loops
 
   //-----------------------------------------------------------------------------
   // Helper function to check if ingredient is available
@@ -156,11 +156,11 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
   };
 
   //-----------------------------------------------------------------------------
-  // Helper function to determine if button should be disabled
+  // Helper function to determine if button should be disabled (only for unavailable ingredients)
   const isButtonDisabled = (ingredient) => {
     if (disabled || readOnly) return true;
     if (!isIngredientAvailable(ingredient)) return true;
-    return false; // Button is always enabled for available ingredients
+    return false;
   };
 
   //-----------------------------------------------------------------------------
@@ -204,8 +204,8 @@ function IngredientList({ ingredients, setIngredients, selectedIngredients, onTo
         <div className="p-4 text-center bg-light border-bottom">
           <i className="bi bi-arrow-left text-muted" style={{ fontSize: '2rem' }}></i>
           <p className="text-muted mt-2 mb-0">
-            <strong>Please select a dish first</strong><br/>
-            Choose a dish from the menu to start adding ingredients
+            <strong>Please select a dish and size first</strong><br/>
+            Choose a dish and size from the menu to start adding ingredients
           </p>
         </div>
       )}

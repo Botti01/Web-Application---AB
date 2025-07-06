@@ -42,7 +42,6 @@ exports.addOrderIngredients = (orderId, ingredientIds) => {
 
 //--------------------------------------------------------------------------
 // Get all orders for a specific user (order history)
-// Merged function to replace getOrdersByUserId and getOrderHistoryByUserId
 exports.getOrdersByUser = (userId) => {
   return new Promise((resolve, reject) => {
     // Select orders with concatenated ingredient details
@@ -75,7 +74,7 @@ exports.getOrdersByUser = (userId) => {
 };
 
 //--------------------------------------------------------------------------
-// Delete an order (for cancellation)
+// Delete an order
 exports.deleteOrder = (orderId, userId) => {
   return new Promise((resolve, reject) => {
     // First get the order to return ingredient info for availability restoration

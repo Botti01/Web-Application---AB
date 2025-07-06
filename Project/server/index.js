@@ -17,7 +17,7 @@ const dishDao = require('./DAOs/dao-dishes');
 const ingredientDao = require('./DAOs/dao-ingredients');
 const orderDao = require('./DAOs/dao-orders');
 
-const { validationResult, body, check } = require('express-validator');
+const { validationResult, check } = require('express-validator');
 
 //----------------------------------------------------------------------------
 // Create the Express app and configure middleware
@@ -29,6 +29,7 @@ const port = 3001;
 app.use(morgan('dev'));
 app.use(express.json());
 
+//----------------------------------------------------------------------------
 // Enable CORS for the frontend communication
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -63,7 +64,7 @@ passport.use(new LocalStrategy(
 // The TOTP strategy is used for two-factor authentication (2FA)
 passport.use(new TotpStrategy(
   function(user, done) {
-    // All users should have TOTP enabled, but check for robustness
+    // All users should have TOTP, check for robustness
     if (!user.secret) return done(null, null);
     return done(null, base32.decode(user.secret), 30);
   }
@@ -109,8 +110,12 @@ function clientUserInfo(req) {
 
 //----------------------------------------------------------------------------
 // Utility functions
-const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
-  return `${location}[${param}]: ${msg}`;
+const errorFormatter = ({ location, msg, param, value }) => {
+  let error = `${location}[${param}]: ${msg}`;
+  if (value !== undefined && value !== null && value !== '') {
+    error += ` (received: ${JSON.stringify(value)})`;
+  }
+  return error;
 };
 
 //#############################################################################
@@ -134,7 +139,10 @@ app.post('/api/sessions', function(req, res, next) {
 app.post('/api/login-totp', isLoggedIn, function(req, res, next) {
   passport.authenticate('totp', function(err, user, info) {
     if (err) return next(err);
-    if (!user) return res.status(401).json({ error: 'Invalid TOTP code' });
+    if (!user) {
+      const errorMessage = info && info.message ? info.message : 'Invalid TOTP code';
+      return res.status(401).json({ error: errorMessage });
+    }
 
     req.session.method = 'totp';
     return res.json({ otp: 'authorized' });
@@ -164,7 +172,7 @@ app.delete('/api/sessions/current', (req, res) => {
 
 //----------------------------------------------------------------------------
 // Get all dishes (public)
-app.get('/api/dishes', async (req, res) => {
+app.get('/api/dishes', async (_req, res) => {
   try {
     const dishes = await dishDao.getAllDishes();
     res.json(dishes);
@@ -176,7 +184,7 @@ app.get('/api/dishes', async (req, res) => {
 
 //----------------------------------------------------------------------------
 // Get all ingredients with constraints (public)
-app.get('/api/ingredients', async (req, res) => {
+app.get('/api/ingredients', async (_req, res) => {
   try {
     const ingredients = await ingredientDao.getAllIngredients();
     res.json(ingredients);

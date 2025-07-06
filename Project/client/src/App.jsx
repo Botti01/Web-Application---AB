@@ -12,7 +12,7 @@ import API from './API';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import { RestaurantLayout, LoginLayout, NotFoundLayout, OrderHistoryLayout, TotpLayout} from './components/Layout';
+import { RestaurantLayout, LoginLayout, NotFoundLayout, TotpLayout} from './components/Layout';
 
 //----------------------------------------------------------------------------
 function App() {
@@ -50,7 +50,7 @@ function App() {
     try {
       const res = await API.logIn(credentials);
       
-      // All users can do TOTP, set up for TOTP verification
+      // Set up for TOTP verification
       setTotpRequired(true);
       setPendingUser(res);
       setUser(null);
@@ -83,7 +83,7 @@ function App() {
   }
 
   //----------------------------------------------------------------------------
-  // Handle skipping TOTP for users who can do TOTP but choose not to
+  // Handle skipping TOTP
   async function handleSkipTotp() {
     if (pendingUser) {
       setUser({
@@ -138,7 +138,7 @@ function App() {
     setMessageType(type);
     
     // Set a new timeout and store the reference
-    const timeoutId = setTimeout(() => setMessage(''), 5000); // Longer timeout for restaurant messages
+    const timeoutId = setTimeout(() => setMessage(''), 5000);
     setMessageTimeoutRef(timeoutId);
   };
 

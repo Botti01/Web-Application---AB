@@ -22,7 +22,7 @@ exports.getUser = (email, password) => {
                 id: row.id,
                 username: row.email,
                 name: row.name,
-                secret: row.otp_secret // needed for TOTP
+                secret: row.otp_secret
               });
             } else {
               resolve(false);

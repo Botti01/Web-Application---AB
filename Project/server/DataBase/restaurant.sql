@@ -1,4 +1,4 @@
--- Drop tables if they exist (for clean setup)
+-- Drop tables if they exist
 DROP TABLE IF EXISTS order_ingredients;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS ingredient_incompatibilities;
@@ -12,9 +12,9 @@ CREATE TABLE users (
     id      INTEGER PRIMARY KEY AUTOINCREMENT,
     email   TEXT    UNIQUE NOT NULL,
     name    TEXT    NOT NULL,
-    hash    TEXT    NOT NULL,  -- hashed password
-    salt    TEXT    NOT NULL,  -- salt for password
-    otp_secret TEXT  -- TOTP secret for 2FA (all users have TOTP enabled)
+    hash    TEXT    NOT NULL,
+    salt    TEXT    NOT NULL,
+    otp_secret TEXT
 );
 
 -- Base dishes table (pizza, pasta, salad)
@@ -32,7 +32,7 @@ CREATE TABLE ingredients (
     name                    TEXT    UNIQUE NOT NULL,
     price                   REAL    NOT NULL,
     availability            INTEGER,  -- NULL means unlimited
-    current_availability    INTEGER  -- tracks current available portions
+    current_availability    INTEGER   -- tracks current available portions
 );
 
 -- Ingredient dependencies table (ingredient_id requires required_ingredient_id)
@@ -89,19 +89,18 @@ INSERT INTO dishes (name, size, price, max_ingredients) VALUES
 ('salad', 'Large', 9.0, 7);
 
 -- Insert ingredients with initial availability
--- Keep availability as specified in the exam requirements
 INSERT INTO ingredients (name, price, availability, current_availability) VALUES
 ('mozzarella', 1.00, 3, 3),
-('tomatoes', 0.50, NULL, NULL),  -- unlimited
+('tomatoes', 0.50, NULL, NULL), -- unlimited
 ('mushrooms', 0.80, 3, 3),
 ('ham', 1.20, 2, 2),
-('olives', 0.70, NULL, NULL),  -- unlimited
+('olives', 0.70, NULL, NULL),   -- unlimited
 ('tuna', 1.50, 2, 2),
-('eggs', 1.00, NULL, NULL),  -- unlimited
+('eggs', 1.00, NULL, NULL),     -- unlimited
 ('anchovies', 1.50, 1, 1),
-('parmesan', 1.20, NULL, NULL),  -- unlimited
+('parmesan', 1.20, NULL, NULL), -- unlimited
 ('carrots', 0.40, NULL, NULL),  -- unlimited
-('potatoes', 0.30, NULL, NULL);  -- unlimited
+('potatoes', 0.30, NULL, NULL); -- unlimited
 
 -- Insert ingredient dependencies
 -- tomatoes → olives
@@ -144,9 +143,9 @@ INSERT INTO users (email, name, hash, salt, otp_secret) VALUES
 ('e@test.com', 'Elia', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI'),
 ('s@test.com', 'Simone', '15d3c4fca80fa608dcedeb65ac10eff78d20c88800d016369a3d2963742ea288', '72e4eeb14def3b21', 'LXBSMDTMSP2I5XFXIYRGFVWSFI');
 
--- Insert sample orders to meet exam requirements
+-- Insert sample orders 
 -- User 1: 2 Small dishes
--- Order 1: Small pizza with olives, tomatoes, mozzarella (respecting dependency chain)
+-- Order 1: Small pizza with olives, tomatoes, mozzarella
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
 (1, 'pizza', 'Small', 7.20, '2025-06-27 12:30:00');
 
@@ -155,7 +154,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (1, (SELECT id FROM ingredients WHERE name = 'tomatoes')),
 (1, (SELECT id FROM ingredients WHERE name = 'mozzarella'));
 
--- Order 2: Small pasta with ham, carrots (ham has limited availability)
+-- Order 2: Small pasta with ham, carrots
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
 (1, 'pasta', 'Small', 6.60, '2025-06-29 19:15:00');
 
@@ -164,7 +163,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (2, (SELECT id FROM ingredients WHERE name = 'carrots'));
 
 -- User 2: 1 Medium + 1 Large dish
--- Order 3: Medium salad with olives, tuna, eggs, carrots, potatoes (tuna requires olives, max 5 ingredients)
+-- Order 3: Medium salad with olives, tuna, eggs, carrots, potatoes
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
 (2, 'salad', 'Medium', 10.60, '2025-07-03 13:45:00');
 
@@ -175,11 +174,7 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (3, (SELECT id FROM ingredients WHERE name = 'carrots')),
 (3, (SELECT id FROM ingredients WHERE name = 'potatoes'));
 
--- Order 4: Large pizza with mushrooms, anchovies, eggs, carrots, potatoes, parmesan, mozzarella
--- Note: this violates incompatibilities, so let's use: mushrooms, anchovies, carrots, potatoes, parmesan, mozzarella, tomatoes
--- Wait, parmesan requires mozzarella, mozzarella requires tomatoes, tomatoes require olives
--- And olives are incompatible with anchovies, so we can't have both
--- Let's use: olives, tomatoes, mozzarella, parmesan, mushrooms, carrots, potatoes (7 ingredients for Large)
+-- Order 4: olives, tomatoes, mozzarella, parmesan, mushrooms, carrots, potatoes (7 ingredients for Large)
 INSERT INTO orders (user_id, dish_name, dish_size, total_price, order_date) VALUES
 (2, 'pizza', 'Large', 14.30, '2025-07-04 20:00:00');
 
@@ -192,16 +187,4 @@ INSERT INTO order_ingredients (order_id, ingredient_id) VALUES
 (4, (SELECT id FROM ingredients WHERE name = 'carrots')),
 (4, (SELECT id FROM ingredients WHERE name = 'potatoes'));
 
--- Do NOT update ingredient availability since these are pre-loaded orders
--- The application starts with the availability amounts stated in the text for testing:
--- mozzarella: 3, ham: 2, tuna: 2, mushrooms: 3, anchovies: 1
--- All other ingredients are unlimited
-
--- Create indexes for better performance
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_order_ingredients_order_id ON order_ingredients(order_id);
-CREATE INDEX idx_order_ingredients_ingredient_id ON order_ingredients(ingredient_id);
-CREATE INDEX idx_ingredient_dependencies_ingredient_id ON ingredient_dependencies(ingredient_id);
-CREATE INDEX idx_ingredient_dependencies_required_id ON ingredient_dependencies(required_ingredient_id);
-CREATE INDEX idx_ingredient_incompatibilities_ingredient1 ON ingredient_incompatibilities(ingredient1_id);
-CREATE INDEX idx_ingredient_incompatibilities_ingredient2 ON ingredient_incompatibilities(ingredient2_id);
+-- Ingredient availability are not updated since these are pre-loaded orders

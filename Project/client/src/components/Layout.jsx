@@ -103,7 +103,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
           setSelectedIngredients(prevSelected => {
             const availableIngredients = prevSelected.filter(ingredientId => {
               const ingredient = updatedIngredients.find(ing => ing.id === ingredientId);
-              // Keep ingredient if it's still available (null means unlimited, >0 means available)
+              // Keep ingredient if it's still available
               return ingredient && (ingredient.current_availability === null || ingredient.current_availability > 0);
             });
             
@@ -126,7 +126,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
           setSelectedIngredients([]);
         }
       } else {
-        // For other errors, don't clear ingredients - let user retry
+        // For other errors, don't clear ingredients
         try {
           const updatedIngredients = await API.getIngredients();
           setIngredients(updatedIngredients);
@@ -141,7 +141,7 @@ function OrderConfigurationLayout({ user, showMessage }) {
     }
   };
 
-  // Handle ingredient selection toggle - simplified since constraints are handled in IngredientList
+  // Handle ingredient selection toggle - constraints are handled in IngredientList
   const handleToggleIngredient = (ingredientId) => {
     setSelectedIngredients(prev => {
       if (prev.includes(ingredientId)) {

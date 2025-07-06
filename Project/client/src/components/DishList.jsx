@@ -52,7 +52,6 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
         onSelectDish(dishData);
       }
     }
-    // Don't auto-select Medium anymore - let user choose explicitly
   };
 
   // Handle size selection
@@ -68,7 +67,7 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
           `Cannot change to ${size} size. Please remove ${ingredientsToRemove} ingredient${ingredientsToRemove > 1 ? 's' : ''} first. ${size} ${selectedDishType} can have maximum ${newDishData.max_ingredients} ingredients.`,
           'warning'
         );
-        return; // Don't change the size
+        return;
       }
     }
     
@@ -82,13 +81,13 @@ function DishList({ dishes, setDishes, onSelectDish, selectedDish, showMessage, 
     }
   };
 
-  // Get max ingredients for display when no dish is selected
+  // Get max ingredients for display
   const getMaxIngredientsForDisplay = (dishType, size) => {
     if (dishType && size) {
       const dish = dishes.find(d => d.name === dishType && d.size === size);
       return dish ? dish.max_ingredients : 0;
     }
-    // When no specific dish is selected, show max ingredients for the size across all dish types
+    // Show max ingredients for the size across all dish types
     if (size) {
       const dish = dishes.find(d => d.size === size);
       return dish ? dish.max_ingredients : 0;

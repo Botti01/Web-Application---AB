@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { ListGroup, Badge, Button, Card, Alert, Modal, Row, Col } from 'react-bootstrap';
+import { Badge, Button, Alert, Modal, Row, Col } from 'react-bootstrap';
 import API from '../API';
 import OrderConfigurator from './OrderConfigurator';
 
