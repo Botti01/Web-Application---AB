@@ -62,17 +62,17 @@
 
 ### Screenshots
 
-#### Login Page
-![Login Page](./img/Login.png)
-
 #### Homepage (Unauthenticated User)
 ![Homepage](./img/Homepage.png)
 
-#### Order Configuration Page
-![Order Configuration](./img/OrderConfiguration.png)
+#### Login Page
+![Login Page](./img/Login.png)
 
 #### TOTP Authentication Page
 ![TOTP Page](./img/TOTP.png)
+
+#### Order Configuration Page
+![Order Configuration](./img/OrderConfiguration.png)
 
 #### Order History Page
 ![Order History](./img/OrderHistory.png)
